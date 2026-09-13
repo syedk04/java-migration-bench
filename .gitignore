@@ -1,0 +1,21 @@
+# assistant configs - never commit
+CLAUDE.md
+.claude/
+.cursor/
+.aider*
+.continue/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# project scratch
+/workdir/
+/.m2/
+*.log
