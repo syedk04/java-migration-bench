@@ -1,0 +1,102 @@
+[
+  {
+    "repo": "fridujo/spring-automocker",
+    "base_commit": "cfae8bace4bfebb3131634b018310ed32c57294a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "SimpleProgramming/springboot-security-simple-jwt",
+    "base_commit": "de69c334bab277be94605c4807958822b2865494",
+    "license": "MIT"
+  },
+  {
+    "repo": "blue-veery-gmbh/spring-rest-2-ts",
+    "base_commit": "86b75e9265454049c3162bfba6792607a02491c4",
+    "license": "MIT"
+  },
+  {
+    "repo": "Erudika/para",
+    "base_commit": "f17691b2173aba0611ee1b349c2c4ca05306e57a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "aws-cloudformation/cloudformation-cli-java-plugin",
+    "base_commit": "5b354cfd4827628557b99d884d54c639c07330d1",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "spring-projects/spring-data-keyvalue",
+    "base_commit": "c1dd050e01c78143d248c27c36d311ee9f324d7b",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "PacktPublishing/Master-Java-Unit-Testing-with-Spring-Boot-and-Mockito",
+    "base_commit": "36c4b877f11c5a56771c90533a93143a0f23ab73",
+    "license": "MIT"
+  },
+  {
+    "repo": "hzpz/mongeez-spring-boot-starter",
+    "base_commit": "15366a4b02bc743f31cd030636872bd276259811",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "apache/commons-jelly",
+    "base_commit": "fac833cef1a4175b4551f5fedb4067baae0addf1",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "RuntimeTools/javametrics",
+    "base_commit": "f7e1a5ef3fdecb08d1c0fd7c93d00e864c8f9ad8",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "apache/sling-org-apache-sling-resourceresolver",
+    "base_commit": "166800f90a67597fd7e2cb66ce2812bfc6da4059",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "ZHENFENG13/My-Column",
+    "base_commit": "95bef3baf140d53d4fd38a20d606f07c9ea34621",
+    "license": "MIT"
+  },
+  {
+    "repo": "fishstormX/logsight",
+    "base_commit": "125656e1f32060511c27025fa57958eb4d966b79",
+    "license": "MIT"
+  },
+  {
+    "repo": "rht-labs/sonar-auth-openshift",
+    "base_commit": "889b6354b156dc8661a457a88622b005c40790ff",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "poetix/octarine",
+    "base_commit": "1161036869336b85d24c00a556840ef6e286f3a7",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "Zjianru/tensquare",
+    "base_commit": "1095e8953c488e4c5f8a8e5789d7bb08628dd35b",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "zabetak/calcite-tutorial",
+    "base_commit": "31cce59c747e0b763a934109db6a6e7055f175ae",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "BlueObelisk/chemicaltagger",
+    "base_commit": "8a4e6b1fd4b92ae66e6d058327e920a0777ccbff",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "ljessendk/easybinder",
+    "base_commit": "87cb0aa946896f5ff2ca6907f2b0dd0d46cb3bcd",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "moar-regex/moar",
+    "base_commit": "c406bddfbf78c00830fbbf1235290c20007f3325",
+    "license": "MIT"
+  }
+]

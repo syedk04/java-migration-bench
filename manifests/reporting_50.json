@@ -1,0 +1,252 @@
+[
+  {
+    "repo": "fridujo/spring-automocker",
+    "base_commit": "cfae8bace4bfebb3131634b018310ed32c57294a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "SimpleProgramming/springboot-security-simple-jwt",
+    "base_commit": "de69c334bab277be94605c4807958822b2865494",
+    "license": "MIT"
+  },
+  {
+    "repo": "blue-veery-gmbh/spring-rest-2-ts",
+    "base_commit": "86b75e9265454049c3162bfba6792607a02491c4",
+    "license": "MIT"
+  },
+  {
+    "repo": "Erudika/para",
+    "base_commit": "f17691b2173aba0611ee1b349c2c4ca05306e57a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "aws-cloudformation/cloudformation-cli-java-plugin",
+    "base_commit": "5b354cfd4827628557b99d884d54c639c07330d1",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "spring-projects/spring-data-keyvalue",
+    "base_commit": "c1dd050e01c78143d248c27c36d311ee9f324d7b",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "PacktPublishing/Master-Java-Unit-Testing-with-Spring-Boot-and-Mockito",
+    "base_commit": "36c4b877f11c5a56771c90533a93143a0f23ab73",
+    "license": "MIT"
+  },
+  {
+    "repo": "hzpz/mongeez-spring-boot-starter",
+    "base_commit": "15366a4b02bc743f31cd030636872bd276259811",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "apache/commons-jelly",
+    "base_commit": "fac833cef1a4175b4551f5fedb4067baae0addf1",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "RuntimeTools/javametrics",
+    "base_commit": "f7e1a5ef3fdecb08d1c0fd7c93d00e864c8f9ad8",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "apache/sling-org-apache-sling-resourceresolver",
+    "base_commit": "166800f90a67597fd7e2cb66ce2812bfc6da4059",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "ZHENFENG13/My-Column",
+    "base_commit": "95bef3baf140d53d4fd38a20d606f07c9ea34621",
+    "license": "MIT"
+  },
+  {
+    "repo": "fishstormX/logsight",
+    "base_commit": "125656e1f32060511c27025fa57958eb4d966b79",
+    "license": "MIT"
+  },
+  {
+    "repo": "rht-labs/sonar-auth-openshift",
+    "base_commit": "889b6354b156dc8661a457a88622b005c40790ff",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "poetix/octarine",
+    "base_commit": "1161036869336b85d24c00a556840ef6e286f3a7",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "Zjianru/tensquare",
+    "base_commit": "1095e8953c488e4c5f8a8e5789d7bb08628dd35b",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "zabetak/calcite-tutorial",
+    "base_commit": "31cce59c747e0b763a934109db6a6e7055f175ae",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "BlueObelisk/chemicaltagger",
+    "base_commit": "8a4e6b1fd4b92ae66e6d058327e920a0777ccbff",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "ljessendk/easybinder",
+    "base_commit": "87cb0aa946896f5ff2ca6907f2b0dd0d46cb3bcd",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "moar-regex/moar",
+    "base_commit": "c406bddfbf78c00830fbbf1235290c20007f3325",
+    "license": "MIT"
+  },
+  {
+    "repo": "spotify/apollo",
+    "base_commit": "a03105ee1f98f8c5878f4e3c4d03c8732c6384bd",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "284885166/spring-boot-hashids",
+    "base_commit": "4973285e49b48be7b10818fae530159c55af267a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "ronenhamias/scalecube-services",
+    "base_commit": "d4971485ac8d5aa0bcf9449c887b3756365ebd8a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "springdoc/springdoc-openapi",
+    "base_commit": "3483389593a9cc81641fdb87ba2c451cafd77442",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "jspare-projects/vertx-jspare",
+    "base_commit": "327a66ef6191fe0e6818440ae4b3eee1a372ae49",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "jenkinsci/chef-identity-plugin",
+    "base_commit": "bb784cd67b245a97c06e51e6dc477fe21355d8d7",
+    "license": "MIT"
+  },
+  {
+    "repo": "spotify/async-google-pubsub-client",
+    "base_commit": "8e0cef57fabf995ee0025c72e9574f11b2a97948",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "pragmatic-objects/oo-atom",
+    "base_commit": "0658e0eda53b1a12f022f2bd370cfb30f9c314b4",
+    "license": "MIT"
+  },
+  {
+    "repo": "eclipse/keti",
+    "base_commit": "a1c8dbeba85235fc7dd23619316ed7e500bc0b14",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "agentsoz/jill",
+    "base_commit": "9b8f1e7a28d511adfa9bc5dbff4bcb4c524370f8",
+    "license": "MIT"
+  },
+  {
+    "repo": "xVir/api-ai-java-webhook",
+    "base_commit": "ee93847a8d3fb39743a23bb094929ccda4f2c064",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "iKubernetes/spring-boot-helloWorld",
+    "base_commit": "fea6fe43e54f3f0ed434b5f2f2b3e1c3e938d8e8",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "orctom/laputa",
+    "base_commit": "d047a4af0d3a9b2963f0882505e35de5033f4a9e",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "awslabs/aws-device-farm-jenkins-plugin",
+    "base_commit": "5c15e82917704b2995f98a76cf4ae26502062b1a",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "seize-the-dave/get-kanban-simulation",
+    "base_commit": "54b57d9205ba63107e372f941042c09bde8e6174",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "nacos-group/nacos-sync",
+    "base_commit": "61d347609e1dcd5632c9e8d8d383561cd9c7aae9",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "spullara/tikvclient",
+    "base_commit": "c0f9018f23c10820595fde34bb1b97078f077f81",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "fromi/spring-google-openidconnect",
+    "base_commit": "7e29fdfa27f41848dd95f3788c088bffa235888f",
+    "license": "MIT"
+  },
+  {
+    "repo": "hexagonframework/spring-data-ebean",
+    "base_commit": "335ea406340ab1431cb415c0dacb5eb6401bad91",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "camunda-community-hub/camunda-bpm-junit5",
+    "base_commit": "b4d14f3a981c06c47bc9071182a3c4101453c035",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "StephenOTT/STIX-Java",
+    "base_commit": "225b3500ea90f64570f3db4aacba0a94fd2d1430",
+    "license": "MIT"
+  },
+  {
+    "repo": "snowtraces/poetry-web",
+    "base_commit": "0b224e88f8f1eaec6fe09502af61ec71960b35c7",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "wirecardBrasil/mockkid",
+    "base_commit": "5ecadf86c9fa04313cc08680ba4cd16bf4c35546",
+    "license": "MIT"
+  },
+  {
+    "repo": "dgroup/xlsx-matchers",
+    "base_commit": "793f2cd74a08339c372cdea0fad07fb0d1c04c6f",
+    "license": "MIT"
+  },
+  {
+    "repo": "visallo/webster",
+    "base_commit": "aa661d2b10ca1ba0e934a94d74f45e5c7a5d6ff3",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "fenixsoft/microservice_arch_springcloud",
+    "base_commit": "29208692bf0abcce16cd55cfcca364f36fefc11f",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "tlbdk/copybook4java",
+    "base_commit": "971e453155ca9e3b96cc49e04fc3a58033d2b3b2",
+    "license": "MIT"
+  },
+  {
+    "repo": "lkrnac/blog-2014-12-06-mock-spring-bean",
+    "base_commit": "396af50db7af42d23dde0c59c0e5e74e3467eb49",
+    "license": "MIT"
+  },
+  {
+    "repo": "ProgrammerAnthony/SentinelC",
+    "base_commit": "1f7ee034c1bfec32b7524966e8862e2893907d2f",
+    "license": "Apache-2.0"
+  },
+  {
+    "repo": "cloudiator/visor",
+    "base_commit": "96573c2631bb1a797da64b38591fb0f26576f56d",
+    "license": "Apache-2.0"
+  }
+]

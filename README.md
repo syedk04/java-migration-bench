@@ -49,3 +49,10 @@ Nothing yet. First numbers land after the OpenRewrite calibration run
 ## Build log
 
 - S1: repo skeleton.
+- S2: dataset loader. Pulls `AmazonScience/migration-bench-java-selected` (300
+  repos) from HuggingFace's dataset-viewer API and writes two fixed-seed
+  manifests: `manifests/dev_20.json` (never reported, iteration only) and
+  `manifests/reporting_50.json` (the slice actual numbers come from). The dev
+  slice is a prefix of the reporting slice under the same seed, so extending
+  the reporting slice later stays consistent. Both are committed alongside
+  the full dataset snapshot in `data/`.
