@@ -56,3 +56,16 @@ Nothing yet. First numbers land after the OpenRewrite calibration run
   slice is a prefix of the reporting slice under the same seed, so extending
   the reporting slice later stays consistent. Both are committed alongside
   the full dataset snapshot in `data/`.
+- S3: base Docker image (`docker/Dockerfile`). Ubuntu 22.04 with JDK 8 and
+  JDK 17 both installed, Maven 3.9.6 pinned from the Apache archive (not
+  whatever Ubuntu's apt happens to ship), and `use-java.sh` to switch the
+  active JDK in a running container (`. use-java.sh 17`). Defaults to Java 8
+  so a bare `mvn` invocation matches each repo's base state. One shared named
+  volume (`migration-agent-m2`) mounts at `/root/.m2` and persists across
+  container runs - built once in S3, warmed across the full slice in S5, and
+  reused by every later run so dependencies aren't re-downloaded per repo.
+
+  Dev note: on Windows with Git Bash, `docker run` with Unix-style paths
+  (e.g. `-v name:/root/.m2`) needs `MSYS_NO_PATHCONV=1` set first, or Git
+  Bash rewrites the container path into a Windows one and the mount fails
+  silently with a "file not found" that has nothing to do with Docker.
