@@ -69,3 +69,11 @@ Nothing yet. First numbers land after the OpenRewrite calibration run
   (e.g. `-v name:/root/.m2`) needs `MSYS_NO_PATHCONV=1` set first, or Git
   Bash rewrites the container path into a Windows one and the mount fails
   silently with a "file not found" that has nothing to do with Docker.
+- S4: clone-and-run (`src/migration_agent/runner.py`). Clones a repo at its
+  `base_commit`, deletes `.git` and reinitializes as a single fresh commit
+  (deliberate - agents that see real history can find the actual upstream
+  Java 17 fix commit and copy it instead of migrating anything, which
+  Cursor measured at 9% of SWE-bench Pro solves), then runs
+  `mvn clean verify` under Java 8 in the sandbox container. Verified end to
+  end against `fridujo/spring-automocker` from the dev slice: single-commit
+  history confirmed, build green, exit code 0.
