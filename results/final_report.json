@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-14T21:44:33Z",
+  "generated_at": "2026-09-14T22:48:29Z",
   "tracks": [
     {
       "track": "T0",
@@ -24,19 +24,19 @@
     {
       "track": "T1",
       "label": "T1: OpenRewrite UpgradeToJava17",
-      "n": 23,
-      "minimal_k": 3,
-      "maximal_k": 3,
-      "maximal_vacuous_k": 3,
-      "minimal_pct": 13.04,
-      "maximal_pct": 13.04,
+      "n": 50,
+      "minimal_k": 5,
+      "maximal_k": 5,
+      "maximal_vacuous_k": 5,
+      "minimal_pct": 10.0,
+      "maximal_pct": 10.0,
       "minimal_ci95": [
-        4.5,
-        32.1
+        4.3,
+        21.4
       ],
       "maximal_ci95": [
-        4.5,
-        32.1
+        4.3,
+        21.4
       ],
       "avg_calls": null,
       "audit": null

@@ -49,7 +49,7 @@ just satisfied the checker.
 | track | n | minimal | 95% CI | maximal | 95% CI | avg calls |
 |---|---|---|---|---|---|---|
 | T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 18.0% | [9.8, 30.8] | — |
-| T1: OpenRewrite UpgradeToJava17 | 23 | 13.0% | [4.5, 32.1] | 13.0% | [4.5, 32.1] | — |
+| T1: OpenRewrite UpgradeToJava17 | 50 | 10.0% | [4.3, 21.4] | 10.0% | [4.3, 21.4] | — |
 
 ### Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)
 
