@@ -12,6 +12,7 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -27,7 +28,13 @@ def _force_remove_readonly(func, path, _exc_info) -> None:
 
 
 def _rmtree(path: Path) -> None:
-    shutil.rmtree(path, onerror=_force_remove_readonly)
+    if sys.platform == "win32":
+        # shutil.rmtree uses Win32 APIs that fail on paths > 260 chars even
+        # when core.longpaths=true (that flag only affects git, not Python).
+        # Maven target/ trees routinely exceed this limit. cmd rmdir handles it.
+        subprocess.run(["cmd", "/c", "rmdir", "/s", "/q", str(path)], check=True)
+    else:
+        shutil.rmtree(path, onerror=_force_remove_readonly)
 
 
 def clone_at_commit(repo: str, base_commit: str, dest: Path) -> None:

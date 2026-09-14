@@ -77,3 +77,20 @@ Nothing yet. First numbers land after the OpenRewrite calibration run
   `mvn clean verify` under Java 8 in the sandbox container. Verified end to
   end against `fridujo/spring-automocker` from the dev slice: single-commit
   history confirmed, build green, exit code 0.
+- S5: warm the shared `.m2` cache across all 50 reporting-slice repos.
+  **43/50 green under Java 8.** `.m2` volume: 2.5 GB after the full run.
+
+  The 7 failures break down as: 6 genuine Maven build failures on Java 8
+  (the paper's F3 filter is supposed to exclude these but a few slip
+  through), and 1 repo (`ProgrammerAnthony/SentinelC`) whose base commit
+  no longer exists in the upstream repo - force-push or history rewrite
+  after the dataset was cut. These 7 repos will be recorded as
+  unverifiable in the results store and skipped in scoring (they contribute
+  to the denominator as failures, same as the paper's own pipeline).
+
+  One Windows-specific bug found and fixed: Python's `shutil.rmtree` fails
+  with WinError 3 on Maven `target/` trees whose nested bytecode paths
+  exceed Windows' 260-char limit, even with `git config core.longpaths
+  true` (that flag only affects git, not Python's Win32 calls). Fixed in
+  `runner.py` by using `cmd /c rmdir /s /q` on Windows. Without the fix,
+  5 repos that are actually green would have been misreported as failures.
