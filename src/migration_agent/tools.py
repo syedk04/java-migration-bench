@@ -335,16 +335,20 @@ def run_maven(repo_dir: Path, goal: str) -> dict:
             f"Permitted: {sorted(_ALLOWED_MAVEN_GOALS)}"
         ))
     command = f". /use-java.sh 17 && cd /workspace && mvn -B clean {goal}"
-    proc = subprocess.run(
-        [
-            "docker", "run", "--rm",
-            "-v", f"{repo_dir.resolve()}:/workspace",
-            "-v", f"{M2_VOLUME}:/root/.m2",
-            IMAGE, "bash", "-c", command,
-        ],
-        capture_output=True,
-        text=True,
-    )
+    try:
+        proc = subprocess.run(
+            [
+                "docker", "run", "--rm",
+                "-v", f"{repo_dir.resolve()}:/workspace",
+                "-v", f"{M2_VOLUME}:/root/.m2",
+                IMAGE, "bash", "-c", command,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=600,  # 10 min hard wall; T2/T3/T4 agent calls hit this limit
+        )
+    except subprocess.TimeoutExpired:
+        return _result(False, error="Maven build timed out after 600 seconds")
     combined = proc.stdout + proc.stderr
     return _result(
         ok=proc.returncode == 0,
