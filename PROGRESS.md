@@ -95,7 +95,66 @@ Windows 11. Things that will bite a fresh agent:
 
 ---
 
-## Completed steps
+## Completed steps (this session)
+
+### S12 — results store + README table (commit `b92bcb3`)
+`src/migration_agent/results.py`: reads T0/T1 JSON logs, computes Wilson 95%
+CIs, writes `results/t0_summary.json` + `results/t1_summary.json`, regenerates
+`README.md` Results section (live table + paper reference rows). 11 tests.
+
+### S13 — Gemini client (commit `a70453b`)
+`src/migration_agent/gemini_client.py`: stdlib-only urllib, 14 RPM token
+bucket, 1400 RPD daily counter with date-rollover reset, 429/503 exponential
+backoff (6 retries, cap 60s), JSONL log per call. 9 tests.
+
+### S14 — tool layer (commit `9789521`)
+`src/migration_agent/tools.py`: read/write/list/grep/apply_patch/run_maven/
+run_command. Path-traversal guard, 256 KB read cap, output truncated head+tail,
+Maven goal allowlist, run_command allowlist + shell metacharacter rejection.
+25 tests.
+
+### S15 — agent loop (commit `ee0ed47`)
+`src/migration_agent/agent_loop.py`: 40-call budget, JSONL trajectory per repo
+(every turn logged), terminal record written after verification, resume skips
+completed repos, incremental JSON writes. 16 tests.
+
+### S16 prep — T2 naive runner (commit `82464af`)
+`src/migration_agent/migrate_t2.py`: naive system prompt (task + tools, no
+playbook), --pilot runs first 5 + prints throughput projection. Ready to run
+once API key is available.
+
+### S19 — T3 engineered prompt (commit `82464af`)
+`src/migration_agent/migrate_t3.py`: system prompt with maximal criterion,
+anti-test-disabling rule, Java 8→17 playbook (JAXB, javax→jakarta, Nashorn,
+--add-opens, removed APIs, dep bumps).
+
+### S20 — version index built (commit `503db7b` + `746a6fa`)
+`src/migration_agent/version_index.py`: 650 artifacts → 625 hits from Maven
+Central (2026-09-14T20:35:52Z). `data/version_index.json` committed.
+Activates S9 maximal checker for T2/T3/T4. 9 tests.
+
+### S21 — T4 retrieval runner (commit `49e1bc7`)
+`src/migration_agent/migrate_t4.py`: per-repo version context injected into
+system prompt from version_index.json. Hypothesis: version lookup drives the
+RAG gain more than reasoning.
+
+### S22 — transcript auditor (commit `82464af`)
+`src/migration_agent/transcript_audit.py`: GENUINE/RETRIEVED/GAMED classifier,
+reads trajectory + git diff blind to pass/fail. 8 tests.
+
+### S23 — final report generator (commit `746a6fa`)
+`src/migration_agent/final_report.py`: Wilson CIs for all tracks, audited
+maximal, paper reference table, writes `results/final_report.json` + updates
+README.md. 8 tests.
+
+### S25 — GitHub Actions CI (commit `4a20e26`)
+`.github/workflows/ci.yml`: ruff + mypy + pytest on push/PR.
+`.github/workflows/verify-diffs.yml`: workflow_dispatch re-verifier.
+`pyproject.toml`: mypy added to dev deps. All ruff errors resolved.
+
+---
+
+## Previously completed steps
 
 ### S1 — repo skeleton (commit `1fd1c4c`)
 `pyproject.toml`, `src/migration_agent/__init__.py`, `tests/test_smoke.py`,
@@ -192,123 +251,79 @@ property style, plugin config style, and absent settings (injects into
 These 9 repos were already Java-17-compatible with only a compiler bump.
 This is the floor — every LLM track should beat it.
 
-### T1 (OpenRewrite) — RUNNING (restarted 2026-09-14)
-PID `317`, started 2026-09-14. Previous run (PID 548) died after 6 clones
-with no results. Fixed: incremental JSON writes (crash-safe), Python `-u`
-(unbuffered stdout so print lines land in log), resume mode (reruns skip
-already-completed repos).
+### T1 (OpenRewrite) — RUNNING (23/50 done, 3 PASS so far)
+PID `317`, started 2026-09-14. 23/50 repos processed. 3 PASS (~13% so far,
+on track for ~16.33% target).
 
 Log: `workdir/_logs/t1_batch_output.log` (gitignored).
 JSON: `workdir/_logs/t1_reporting_50.json` written after every repo.
 
 - Liveness: `kill -0 317 2>/dev/null && echo running`
-- Progress: `grep -c "-> " workdir/_logs/t1_batch_output.log`
-
-This batch will take several hours (OpenRewrite downloads recipe JARs
-on first run, then each repo takes a few minutes).
+- Progress: `python -c "import json; d=json.load(open('workdir/_logs/t1_reporting_50.json')); print(f'{len(d)}/50, {sum(1 for r in d if r[\"minimal\"])} PASS')"`
 
 ---
 
 ## Immediate next actions (resume here)
 
-1. **Check if T1 batch (PID 548) is still running or finished:**
-   ```bash
-   kill -0 548 2>/dev/null && echo running || echo done
-   ```
-   If it died early, rerun:
-   ```bash
-   export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
-   cd "C:/Users/6ix4o/Documents/PersonalProjects/AI Repository Migration Agent"
-   nohup uv run python -m migration_agent.migrate_openrewrite \
-     --batch --manifest reporting_50.json \
-     > workdir/_logs/t1_batch_output.log 2>&1 &
-   disown
-   ```
+### 1. Wait for T1 to finish (PID 317)
+```bash
+kill -0 317 2>/dev/null && echo running || echo done
+python -c "import json; d=json.load(open('workdir/_logs/t1_reporting_50.json')); print(f'{len(d)}/50, {sum(1 for r in d if r[chr(34)+\"minimal\"+chr(34)]) } PASS')"
+```
+If PID 317 died, restart (resume mode will skip already-done repos):
+```bash
+export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
+cd "C:/Users/6ix4o/Documents/PersonalProjects/AI Repository Migration Agent"
+nohup uv run python -u -m migration_agent.migrate_openrewrite \
+  --batch --manifest reporting_50.json \
+  > workdir/_logs/t1_batch_output.log 2>&1 &
+disown && echo "PID: $!"
+```
 
-2. **When T1 finishes**, read the final lines of the log:
-   ```bash
-   tail -5 workdir/_logs/t1_batch_output.log
-   ```
-   It will print:
-   ```
-   T1 results (50 repos):
-     minimal: X/50 = Y.YY%
-     maximal: X/50 = Y.YY%
-     (paper calibration target: ~16.33% minimal, ~2.00% maximal)
-   ```
+### 2. S11 HARD GATE — check calibration numbers
+When T1 finishes (`tail -5 workdir/_logs/t1_batch_output.log`):
+Target: **~16.33% minimal, ~2.00% maximal** (±5 pp expected at n=50).
+If way off, stop and investigate the verifier before proceeding.
 
-3. **HARD GATE — S11: Stop and show the user both numbers.**
-   Do not proceed if they are materially off (roughly ±5 pp from targets
-   given n=50 vs paper's n=300). If they look reasonable, say so and ask
-   whether to continue to S12.
+### 3. Commit T1 results
+```bash
+uv run python -m migration_agent.results
+uv run python -m migration_agent.final_report
+git add results/ README.md && git commit -m "S12: T1 results — X/50 minimal"
+git push
+```
 
-4. **If S11 passes:** commit T0+T1 results summary to README (S12),
-   then proceed to S13 (Gemini client).
+### 4. S16 HARD GATE — T2 pilot (need GEMINI_API_KEY)
+```bash
+export GEMINI_API_KEY=<key>
+export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
+uv run python -m migration_agent.migrate_t2 --pilot --manifest reporting_50.json
+```
+**STOP and show user** calls/tokens + throughput projection before running full 50.
+
+### 5. T2 full → T3 pilot → T3 full → T4 pilot → T4 full
+Each: pilot first, show numbers, get approval, then full run.
+After each full run: `uv run python -m migration_agent.final_report && git commit ...`
+
+### 6. S22: Audit passing trajectories
+```bash
+uv run python -m migration_agent.transcript_audit --track T2
+```
+Then hand-label 30 with the user, report Cohen's κ.
 
 ---
 
-## Remaining steps (S12–S27)
+## Remaining steps
 
-Each step: build it, run it on real data, commit, push. Do not batch.
+- **S17** Network isolation: proxy allowlisting repo1.maven.org, log blocked
+  requests. Rerun T2 isolated, check if number moved. (Can skip if T2 shows
+  clean Maven-only traffic.)
+- **S18** Failure taxonomy from T2 logs. Build after seeing actual failures.
+- **S24** Second model arm: Flash-Lite on T3/T4.
+- **S26** PR generator for 3 non-benchmark forks.
+- **S27** GitHub Pages results page.
 
-- **S12** Results store + README table generator. Read T0 and T1 JSON
-  logs, write committed results to `results/` dir, generate the README
-  table. First real numbers land here at zero LLM cost.
-
-- **S13** Gemini client: 14 RPM / 1400 RPD token bucket, 429 backoff,
-  full request/response/token logging. Test standalone before wiring into
-  anything else.
-
-- **S14** Tool layer: `read_file`, `list_dir`, `grep`, `write_file`,
-  `apply_patch`, `run_maven(compile|test|verify)` with truncated
-  head+tail output, `run_command` restricted to an explicit allowlist
-  (java/javac/mvn/ls/find/cat/head/tail/grep/sed/diff/git diff/git
-  status). No raw bash — deliberate, for tamper-detection tractability.
-
-- **S15** Agent loop: hand-rolled, 40 calls, temperature 0, JSONL
-  trajectory per repo (every message/tool call/result/token/latency),
-  resumable, per-repo result JSON (finished repo never reruns).
-
-- **S16 — HARD GATE.** T2: naive prompt, 5 repos first. Report calls and
-  tokens per repo, project daily throughput at 14 RPM / 1400 RPD. Show
-  before running full 50.
-
-- **S17** Network isolation: proxy allowlisting `repo1.maven.org` only,
-  log every blocked request. Rerun T2 isolated, check if number moved.
-
-- **S18** Failure taxonomy from actual T2 logs. Show before building S19.
-
-- **S19** T3: engineered prompt — maximal criterion explicit, Java 8→17
-  breaking-change playbook (javax→jakarta, JAXB/JAX-WS removal, Nashorn,
-  `--add-opens`, SecurityManager), S18 taxonomy mapped to Maven error
-  signatures, explicit instruction that disabling/excluding tests = FAIL.
-
-- **S20** Dependency version index: query Maven Central REST API for
-  latest major of every dep in the slice, snapshot to `data/version_index.json`
-  with date stamp. Activates the S9 maximal check.
-
-- **S21** T4: retrieval — playbook + version index served locally.
-  Hypothesis: version index (lookup) drives the RAG gain more than
-  reasoning. Split T4 vs T3 failures by dep-vs-language cause; report
-  honestly if hypothesis is wrong.
-
-- **S22** Transcript auditor: second model reads every passing trajectory
-  blind to pass/fail, classifies genuine / retrieved / gamed. Validate
-  by hand-labelling 30 trajectories with the user and reporting agreement.
-
-- **S23** Wilson 95% intervals on every rate. Final tables: track,
-  minimal, maximal, AUDITED maximal, CI, calls/success, wall-clock/success,
-  equivalent list-price cost (labelled — zero actual spend).
-
-- **S24** (packaging) Second model arm: Gemini 2.5 Flash-Lite on T3/T4.
-
-- **S25** (packaging) GitHub Actions: ruff/mypy/pytest on every PR +
-  `workflow_dispatch` matrix re-verifying stored diffs.
-
-- **S26** (packaging) PR generator for real migrations on 3 non-benchmark
-  forks.
-
-- **S27** (packaging) GitHub Pages results page from committed results JSON.
+S12–S23, S25 complete. S16/T2 blocked on API key. S17/S18/S24/S26/S27 remain.
 
 S1–S23 is the actual project. S24–S27 is packaging.
 
