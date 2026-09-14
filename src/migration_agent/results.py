@@ -26,7 +26,7 @@ _TRACKS = [
 ]
 
 # Paper reference numbers (n=300, Claude 4.5 Sonnet, 80-call cutoff).
-_PAPER = {
+_PAPER: dict[str, dict[str, float | None]] = {
     "OpenRewrite (paper n=300)": {"minimal": 16.33, "maximal": 2.00},
     "Strands baseline (paper n=300)": {"minimal": 71.67, "maximal": 15.33},
     "+ prompt engineering (paper n=300)": {"minimal": None, "maximal": 45.67},
