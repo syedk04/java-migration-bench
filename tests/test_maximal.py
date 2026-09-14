@@ -156,3 +156,48 @@ def test_load_version_index_missing_returns_empty():
     from migration_agent.maximal import VERSION_INDEX_PATH, load_version_index
     if not VERSION_INDEX_PATH.exists():
         assert load_version_index() == {}
+
+
+_POM_BOM_MANAGED = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.7.0</version>
+  </parent>
+  <groupId>test</groupId><artifactId>test</artifactId><version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+  </dependencies>
+</project>
+"""
+
+
+def test_bom_managed_passes_vacuously():
+    """BOM-managed deps (no explicit <version>) are invisible to the scanner.
+    Result: checked=0, passed=True (vacuous), detail contains 'vacuous' flag.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, _POM_BOM_MANAGED)
+        result = check_maximal(root, _INDEX)
+        assert result.passed          # vacuous pass
+        assert result.checked == 0
+        assert result.outdated == []
+        assert "vacuous" in result.detail
+
+
+def test_unknown_dep_detail_is_vacuous():
+    """Repos with no indexable deps also get the vacuous flag in detail."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, _POM_UNKNOWN_DEP)
+        result = check_maximal(root, _INDEX)
+        assert result.checked == 0
+        assert "vacuous" in result.detail
