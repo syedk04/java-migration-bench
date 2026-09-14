@@ -209,13 +209,17 @@ def generate_html(report: dict) -> str:
 def main() -> None:
     report_path = RESULTS_DIR / "final_report.json"
     if report_path.exists():
-        report = json.loads(report_path.read_text())
+        report = json.loads(report_path.read_text(encoding="utf-8"))
     else:
         # Fallback: build a minimal report from available summaries.
         print("final_report.json not found — building from individual summaries")
         from migration_agent.final_report import main as build_report
         build_report()
-        report = json.loads(report_path.read_text()) if report_path.exists() else {"tracks": []}
+        report = (
+            json.loads(report_path.read_text(encoding="utf-8"))
+            if report_path.exists()
+            else {"tracks": []}
+        )
 
     DOCS_DIR.mkdir(exist_ok=True)
     html = generate_html(report)

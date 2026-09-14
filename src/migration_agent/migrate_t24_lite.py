@@ -83,12 +83,12 @@ def main() -> None:
     cfg = _TRACK_CONFIG[args.track]
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     manifest_path = MANIFEST_DIR / args.manifest
-    all_entries = json.loads(manifest_path.read_text())
+    all_entries = json.loads(manifest_path.read_text(encoding="utf-8"))
     entries = all_entries[:5] if args.pilot else all_entries
 
     if args.pilot:
         tmp = LOGS_DIR / f"{cfg['out_name']}_pilot_5.json"
-        tmp.write_text(json.dumps(entries) + "\n")
+        tmp.write_text(json.dumps(entries) + "\n", encoding="utf-8")
         manifest_path = tmp
         out_path = LOGS_DIR / f"{cfg['out_name']}_pilot_5_results.json"
     else:

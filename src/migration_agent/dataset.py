@@ -68,12 +68,14 @@ def main() -> None:
     rows = fetch_dataset()
     if len(rows) != 300:
         raise SystemExit(f"expected 300 rows, got {len(rows)}")
-    DATASET_FILE.write_text(json.dumps(rows, indent=2) + "\n")
+    DATASET_FILE.write_text(json.dumps(rows, indent=2) + "\n", encoding="utf-8")
 
     dev_manifest = build_manifest(rows, DEV_SIZE)
     reporting_manifest = build_manifest(rows, REPORTING_SIZE)
-    DEV_MANIFEST_FILE.write_text(json.dumps(dev_manifest, indent=2) + "\n")
-    REPORTING_MANIFEST_FILE.write_text(json.dumps(reporting_manifest, indent=2) + "\n")
+    DEV_MANIFEST_FILE.write_text(json.dumps(dev_manifest, indent=2) + "\n", encoding="utf-8")
+    REPORTING_MANIFEST_FILE.write_text(
+        json.dumps(reporting_manifest, indent=2) + "\n", encoding="utf-8"
+    )
 
     print(f"wrote {len(rows)} rows to {DATASET_FILE}")
     print(f"wrote {len(dev_manifest)}-repo dev manifest to {DEV_MANIFEST_FILE}")

@@ -93,7 +93,7 @@ def collect_artifacts(pom_path: Path) -> set[tuple[str, str]]:
 
 def collect_all_artifacts(manifest_name: str = "reporting_50.json") -> set[tuple[str, str]]:
     """Collect all (groupId, artifactId) pairs from all repos in the manifest."""
-    manifest = json.loads((MANIFEST_DIR / manifest_name).read_text())
+    manifest = json.loads((MANIFEST_DIR / manifest_name).read_text(encoding="utf-8"))
     all_artifacts: set[tuple[str, str]] = set()
     for entry in manifest:
         repo = entry["repo"]
@@ -154,7 +154,7 @@ def build_index(
     existing: dict = {}
     if resume and out_path.exists():
         try:
-            saved = json.loads(out_path.read_text())
+            saved = json.loads(out_path.read_text(encoding="utf-8"))
             existing = saved.get("index", {})
             print(f"Resuming: {len(existing)} entries already saved.")
         except Exception:  # noqa: BLE001
@@ -214,7 +214,7 @@ def _write_index(path: Path, index: dict[str, str], manifest_name: str) -> None:
         "count": len(index),
         "index": index,
     }
-    path.write_text(json.dumps(payload, indent=2) + "\n")
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------

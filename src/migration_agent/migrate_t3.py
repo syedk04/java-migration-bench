@@ -159,12 +159,12 @@ def main() -> None:
 
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     manifest_path = MANIFEST_DIR / args.manifest
-    all_entries = json.loads(manifest_path.read_text())
+    all_entries = json.loads(manifest_path.read_text(encoding="utf-8"))
     entries = all_entries[:5] if args.pilot else all_entries
 
     if args.pilot:
         tmp_manifest = LOGS_DIR / "t3_pilot_5.json"
-        tmp_manifest.write_text(json.dumps(entries) + "\n")
+        tmp_manifest.write_text(json.dumps(entries) + "\n", encoding="utf-8")
         manifest_path = tmp_manifest
         out_path = LOGS_DIR / "t3_pilot_5_results.json"
     else:

@@ -449,13 +449,13 @@ def run_batch(
 ) -> list[AgentResult]:
     """Run agent loop over all repos in manifest, writing results incrementally."""
 
-    entries = json.loads(manifest_path.read_text())
+    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     # Load already-completed results for resume.
     done: dict[str, dict] = {}
     if out_path.exists():
         try:
-            for r in json.loads(out_path.read_text()):
+            for r in json.loads(out_path.read_text(encoding="utf-8")):
                 done[r["repo"]] = r
         except Exception:  # noqa: BLE001
             pass
@@ -504,7 +504,8 @@ def run_batch(
         results.append(ar)
         # Incremental write — crash-safe.
         out_path.write_text(
-            json.dumps([r.to_dict() for r in results], indent=2) + "\n"
+            json.dumps([r.to_dict() for r in results], indent=2) + "\n",
+            encoding="utf-8",
         )
 
     return results

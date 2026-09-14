@@ -132,7 +132,7 @@ def apply_t0(repo_dir: Path) -> dict:
 
 def run_batch(manifest_path: Path) -> list[dict]:
     """Run T0 on every repo in manifest_path and return per-repo records."""
-    entries = json.loads(manifest_path.read_text())
+    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
     results = []
     for i, entry in enumerate(entries, start=1):
         repo, base_commit = entry["repo"], entry["base_commit"]
@@ -178,7 +178,7 @@ def main() -> None:
         manifest_path = MANIFEST_DIR / args.manifest
         results = run_batch(manifest_path)
         out = RESULTS_DIR / f"t0_{args.manifest}"
-        out.write_text(json.dumps(results, indent=2) + "\n")
+        out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
         passed = sum(1 for r in results if r.get("minimal"))
         print(f"\n{passed}/{len(results)} minimal pass (T0)")
         print(f"results written to {out}")

@@ -53,7 +53,7 @@ def _load_version_map() -> dict[str, str]:
     if not _VERSION_INDEX_PATH.exists():
         return {}
     try:
-        data = json.loads(_VERSION_INDEX_PATH.read_text())
+        data = json.loads(_VERSION_INDEX_PATH.read_text(encoding="utf-8"))
         return data.get("index", {})
     except Exception:  # noqa: BLE001
         return {}
@@ -131,13 +131,13 @@ class _VersionAugmentedBatch:
         from migration_agent.agent_loop import run_agent
         from migration_agent.gemini_client import GeminiRateLimitError
 
-        entries = json.loads(manifest_path.read_text())
+        entries = json.loads(manifest_path.read_text(encoding="utf-8"))
 
         # Resume: load already-done.
         done: dict[str, dict] = {}
         if self._out_path.exists():
             try:
-                for r in json.loads(self._out_path.read_text()):
+                for r in json.loads(self._out_path.read_text(encoding="utf-8")):
                     done[r["repo"]] = r
             except Exception:  # noqa: BLE001
                 pass
@@ -243,12 +243,12 @@ def main() -> None:
 
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     manifest_path = MANIFEST_DIR / args.manifest
-    all_entries = json.loads(manifest_path.read_text())
+    all_entries = json.loads(manifest_path.read_text(encoding="utf-8"))
     entries = all_entries[:5] if args.pilot else all_entries
 
     if args.pilot:
         tmp_manifest = LOGS_DIR / "t4_pilot_5.json"
-        tmp_manifest.write_text(json.dumps(entries) + "\n")
+        tmp_manifest.write_text(json.dumps(entries) + "\n", encoding="utf-8")
         manifest_path = tmp_manifest
         out_path = LOGS_DIR / "t4_pilot_5_results.json"
     else:

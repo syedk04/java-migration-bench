@@ -17,7 +17,7 @@ LOG_DIR = REPO_ROOT / "workdir" / "_logs"
 
 
 def warm(manifest_path: Path) -> list[dict]:
-    entries = json.loads(manifest_path.read_text())
+    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
     results = []
     for i, entry in enumerate(entries, start=1):
         repo, base_commit = entry["repo"], entry["base_commit"]
@@ -51,7 +51,7 @@ def main() -> None:
     results = warm(manifest_path)
 
     out_path = LOG_DIR / f"warm_{args.manifest}"
-    out_path.write_text(json.dumps(results, indent=2) + "\n")
+    out_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
 
     green = sum(1 for r in results if r["success"])
     print(f"\n{green}/{len(results)} green under Java 8")

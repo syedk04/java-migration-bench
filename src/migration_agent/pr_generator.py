@@ -110,7 +110,7 @@ def collect_passing(results_path: Path, track: str) -> list[dict]:
     """
     if not results_path.exists():
         return []
-    records = json.loads(results_path.read_text())
+    records = json.loads(results_path.read_text(encoding="utf-8"))
     passing = []
     for r in records:
         if not r.get("minimal"):

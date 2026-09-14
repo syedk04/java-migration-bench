@@ -34,7 +34,7 @@ def recheck_track(track: str, filename: str, index: dict) -> int:
         print(f"[{track}] {filename} not found — skipping")
         return 0
 
-    records = json.loads(path.read_text())
+    records = json.loads(path.read_text(encoding="utf-8"))
     changed = 0
 
     for r in records:
@@ -50,8 +50,10 @@ def recheck_track(track: str, filename: str, index: dict) -> int:
         old_r5 = r.get("r5_maximal")
         new_r5 = mr.passed
         new_maximal = r.get("minimal", False) and new_r5
+        old_detail = r.get("maximal_detail", "")
 
-        if old_r5 != new_r5 or r.get("maximal") != new_maximal:
+        # Update if boolean changed OR detail string changed (e.g. vacuous flag added)
+        if old_r5 != new_r5 or r.get("maximal") != new_maximal or old_detail != mr.detail:
             print(
                 f"  {repo}: r5_maximal {old_r5} -> {new_r5}  "
                 f"maximal {r.get('maximal')} -> {new_maximal}  "
@@ -63,7 +65,7 @@ def recheck_track(track: str, filename: str, index: dict) -> int:
             changed += 1
 
     if changed:
-        path.write_text(json.dumps(records, indent=2) + "\n")
+        path.write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
         print(f"[{track}] Updated {changed} records in {filename}")
     else:
         print(f"[{track}] No changes needed")

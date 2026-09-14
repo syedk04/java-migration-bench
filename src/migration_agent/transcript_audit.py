@@ -188,7 +188,7 @@ def run_audit(
 
     Results written to workdir/_logs/{track}_audit.json.
     """
-    results = json.loads(results_path.read_text())
+    results = json.loads(results_path.read_text(encoding="utf-8"))
     passing = [r for r in results if r.get("minimal")]
     print(f"Auditing {len(passing)} passing repos for {track}")
 
@@ -199,7 +199,7 @@ def run_audit(
     done: dict[str, dict] = {}
     if out_path.exists():
         try:
-            for a in json.loads(out_path.read_text()):
+            for a in json.loads(out_path.read_text(encoding="utf-8")):
                 done[a["traj_path"]] = a
         except Exception:  # noqa: BLE001
             pass
@@ -245,7 +245,7 @@ def run_audit(
         result["repo"] = repo
         print(result["classification"])
         audit_results.append(result)
-        out_path.write_text(json.dumps(audit_results, indent=2) + "\n")
+        out_path.write_text(json.dumps(audit_results, indent=2) + "\n", encoding="utf-8")
 
     # Summary.
     counts: dict[str, int] = {}

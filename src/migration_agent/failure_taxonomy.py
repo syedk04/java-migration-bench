@@ -191,7 +191,7 @@ def build_taxonomy(track: str) -> dict[str, list[str]]:
     if not results_path.exists():
         return {}
 
-    records = json.loads(results_path.read_text())
+    records = json.loads(results_path.read_text(encoding="utf-8"))
     taxonomy: dict[str, list[str]] = {}
 
     for r in records:

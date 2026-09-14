@@ -121,13 +121,13 @@ def run_batch(manifest_path: Path, out: Path) -> list[dict]:
     If *out* already exists and contains valid JSON, repos already recorded
     are skipped (resume mode).
     """
-    entries = json.loads(manifest_path.read_text())
+    entries = json.loads(manifest_path.read_text(encoding="utf-8"))
 
     # Load any already-completed results for resumption.
     done: dict[str, dict] = {}
     if out.exists():
         try:
-            for r in json.loads(out.read_text()):
+            for r in json.loads(out.read_text(encoding="utf-8")):
                 done[r["repo"]] = r
         except Exception:  # noqa: BLE001
             pass  # corrupt partial file — start fresh
@@ -155,7 +155,7 @@ def run_batch(manifest_path: Path, out: Path) -> list[dict]:
         print(f"  -> {status} in {record['seconds']}s", flush=True)
         results.append(record)
         # Write incrementally so a crash doesn't lose all progress.
-        out.write_text(json.dumps(results, indent=2) + "\n")
+        out.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
 
     return results
 

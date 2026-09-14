@@ -194,6 +194,6 @@ if __name__ == "__main__":
 
     LOGS_DIR.mkdir(exist_ok=True)
     out = LOGS_DIR / f"network_monitor_{args.repo.replace('/', '__')}.json"
-    out.write_text(json.dumps(result, indent=2) + "\n")
+    out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(f"\nWritten to {out}")
     sys.exit(result["exit_code"])

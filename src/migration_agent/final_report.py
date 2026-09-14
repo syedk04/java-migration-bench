@@ -73,14 +73,14 @@ def _load(filename: str) -> list[dict] | None:
     path = LOGS_DIR / filename
     if not path.exists():
         return None
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _audit_counts(track: str) -> dict[str, int] | None:
     audit_path = LOGS_DIR / f"{track.lower()}_audit.json"
     if not audit_path.exists():
         return None
-    entries = json.loads(audit_path.read_text())
+    entries = json.loads(audit_path.read_text(encoding="utf-8"))
     counts: dict[str, int] = {}
     for e in entries:
         c = e.get("classification", "UNKNOWN")
@@ -249,7 +249,7 @@ def main(dry_run: bool = False) -> None:
         "tracks": summaries,
     }
     out = RESULTS_DIR / "final_report.json"
-    out.write_text(json.dumps(report, indent=2) + "\n")
+    out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(f"Written {out.relative_to(REPO_ROOT)}")
 
     _update_readme(table)

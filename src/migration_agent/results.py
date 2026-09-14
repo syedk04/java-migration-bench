@@ -54,7 +54,7 @@ def load_track(filename: str) -> list[dict] | None:
     path = LOGS_DIR / filename
     if not path.exists():
         return None
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def summarise(records: list[dict], track: str) -> dict:
@@ -175,7 +175,7 @@ def main(dry_run: bool = False) -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
     for s in summaries:
         out = RESULTS_DIR / f"{s['track'].lower()}_summary.json"
-        out.write_text(json.dumps(s, indent=2) + "\n")
+        out.write_text(json.dumps(s, indent=2) + "\n", encoding="utf-8")
         print(f"Written {out.relative_to(REPO_ROOT)}")
 
     update_readme(table)
