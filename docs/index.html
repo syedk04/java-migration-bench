@@ -73,8 +73,8 @@
               18.0%</td>
           <td class="num small">[9.8, 30.8]</td>
           <td class="num" style="color:#dc3545;font-weight:600">
-              0.0%</td>
-          <td class="num small">[0.0, 7.1]</td>
+              18.0%†</td>
+          <td class="num small">[9.8, 30.8]</td>
           <td class="num">—</td>
         </tr>
         <tr>
@@ -85,7 +85,7 @@
               13.0%</td>
           <td class="num small">[4.5, 32.1]</td>
           <td class="num" style="color:#dc3545;font-weight:600">
-              13.0%</td>
+              13.0%†</td>
           <td class="num small">[4.5, 32.1]</td>
           <td class="num">—</td>
         </tr>
@@ -95,7 +95,11 @@
     <strong>Minimal</strong>: build green under Java 17, bytecode v61,
     all original tests present and passing.<br>
     <strong>Maximal</strong>: minimal + every dependency at latest major version
-    (Maven Central snapshot 2024-11).
+    (Maven Central snapshot 2026-09).<br>
+    <em>Caveat (†):</em> r5 only checks deps with explicit &lt;version&gt; in pom.xml.
+    BOM/parent-managed versions pass vacuously (0 deps checked). A † means all
+    maximal passes for this track were vacuous — no explicit dep versions found.
+    Maximal ≈ minimal until full POM resolution is implemented.
   </p>
 </div>
 
@@ -134,7 +138,7 @@
 </div>
 
 <p class="meta">
-  Generated 2026-09-14T21:12:55Z ·
+  Generated 2026-09-14T21:44:33Z ·
   <a href="https://github.com/syedk04/java-migration-bench">syedk04/java-migration-bench</a> ·
   Paper: <a href="https://arxiv.org/abs/2505.09569">arxiv 2505.09569</a>
 </p>

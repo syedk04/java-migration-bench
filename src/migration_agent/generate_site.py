@@ -60,6 +60,10 @@ def generate_html(report: dict) -> str:
         ci_min = s.get("minimal_ci95", [0, 100])
         ci_max = s.get("maximal_ci95", [0, 100])
         avg = f"{s['avg_calls']:.1f}" if s.get("avg_calls") else "—"
+        # Flag when all maximal passes are vacuous (BOM-managed deps, 0 checked)
+        vacuous_k = s.get("maximal_vacuous_k", 0)
+        maximal_k = s.get("maximal_k", 0)
+        vacuous_flag = "†" if vacuous_k > 0 and vacuous_k == maximal_k else ""
 
         rows += f"""
         <tr>
@@ -70,7 +74,7 @@ def generate_html(report: dict) -> str:
               {_pct(min_pct)}</td>
           <td class="num small">{_ci(*ci_min)}</td>
           <td class="num" style="color:{_badge_color(max_pct)};font-weight:600">
-              {_pct(max_pct)}</td>
+              {_pct(max_pct)}{vacuous_flag}</td>
           <td class="num small">{_ci(*ci_max)}</td>
           <td class="num">{avg}</td>
         </tr>"""
@@ -163,9 +167,10 @@ def generate_html(report: dict) -> str:
     all original tests present and passing.<br>
     <strong>Maximal</strong>: minimal + every dependency at latest major version
     (Maven Central snapshot 2026-09).<br>
-    <em>Caveat:</em> r5 only checks deps with explicit &lt;version&gt; in pom.xml.
-    BOM/parent-managed versions pass vacuously (0 deps checked). Maximal ≈ minimal
-    for BOM-heavy repos until full POM resolution is implemented.
+    <em>Caveat (†):</em> r5 only checks deps with explicit &lt;version&gt; in pom.xml.
+    BOM/parent-managed versions pass vacuously (0 deps checked). A † means all
+    maximal passes for this track were vacuous — no explicit dep versions found.
+    Maximal ≈ minimal until full POM resolution is implemented.
   </p>
 </div>
 
