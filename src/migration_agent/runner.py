@@ -67,6 +67,7 @@ def run_maven_verify(repo_dir: Path, java_version: int = 8) -> subprocess.Comple
     """Run `mvn clean verify` for `repo_dir` inside the sandbox container."""
     switch = "" if java_version == 8 else f". use-java.sh {java_version} && "
     command = f"{switch}cd /workspace && mvn -B clean verify"
+    # 600 s hard wall — Maven builds shouldn't take more than 10 min.
     return subprocess.run(
         [
             "docker",
@@ -83,6 +84,7 @@ def run_maven_verify(repo_dir: Path, java_version: int = 8) -> subprocess.Comple
         ],
         capture_output=True,
         text=True,
+        timeout=600,
     )
 
 

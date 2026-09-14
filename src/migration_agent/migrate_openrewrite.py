@@ -56,6 +56,9 @@ def run_openrewrite(repo_dir: Path) -> subprocess.CompletedProcess:
         f"-Drewrite.recipeArtifactCoordinates={_REWRITE_RECIPE_COORDS} "
         f"-Drewrite.activeRecipes={_ACTIVE_RECIPE}"
     )
+    # 600 s (10 min) hard wall: OpenRewrite on large multi-module projects can
+    # silently stall during source-file parsing. subprocess.TimeoutExpired is
+    # caught in run_one() and recorded as an error, not a hang.
     return subprocess.run(
         [
             "docker", "run", "--rm",
@@ -65,6 +68,7 @@ def run_openrewrite(repo_dir: Path) -> subprocess.CompletedProcess:
         ],
         capture_output=True,
         text=True,
+        timeout=600,
     )
 
 
