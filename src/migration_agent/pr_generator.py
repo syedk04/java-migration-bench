@@ -117,7 +117,8 @@ def collect_passing(results_path: Path, track: str) -> list[dict]:
             continue
         repo = r["repo"]
         safe = repo.replace("/", "__")
-        diff_path = TRAJ_BASE / track.lower() / safe / "migration.diff"
+        # agent_loop saves diff at <traj_dir>/<safe>.diff (parallel to .jsonl)
+        diff_path = TRAJ_BASE / track.lower() / f"{safe}.diff"
         passing.append({**r, "diff_path": str(diff_path)})
     return passing
 

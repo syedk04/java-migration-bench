@@ -125,5 +125,6 @@ def test_collect_passing_augments_diff_path():
     passing = collect_passing(Path(fname), "T3")
     assert len(passing) == 1
     assert "diff_path" in passing[0]
-    assert "myorg__myrepo" in passing[0]["diff_path"]
-    assert "t3" in passing[0]["diff_path"].lower()
+    dp = passing[0]["diff_path"]
+    assert "myorg__myrepo.diff" in dp
+    assert "t3" in dp.lower()

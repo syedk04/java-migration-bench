@@ -371,6 +371,24 @@ def run_agent(
     maximal = minimal and r5_maximal
     elapsed = round(time.monotonic() - start, 1)
 
+    # Save migration diff alongside trajectory (only when migration succeeded).
+    # PR generator reads <trajectory_dir>/<safe_name>.diff
+    diff_path = traj_path.with_suffix(".diff")
+    if minimal and dest.is_dir():
+        try:
+            import subprocess as _sp
+            diff_result = _sp.run(
+                ["git", "diff", "HEAD"],
+                cwd=dest,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if diff_result.stdout:
+                diff_path.write_text(diff_result.stdout, encoding="utf-8")
+        except Exception:  # noqa: BLE001
+            pass
+
     terminal_rec = {
         "role": "terminal",
         "turn": turn,
