@@ -23,6 +23,7 @@ CLI (batch):
 import argparse
 import json
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -109,12 +110,32 @@ def run_one(repo: str, base_commit: str) -> dict:
     return record
 
 
-def run_batch(manifest_path: Path) -> list[dict]:
+def run_batch(manifest_path: Path, out: Path) -> list[dict]:
+    """Run batch, writing each result immediately so crashes don't lose progress.
+
+    If *out* already exists and contains valid JSON, repos already recorded
+    are skipped (resume mode).
+    """
     entries = json.loads(manifest_path.read_text())
-    results = []
+
+    # Load any already-completed results for resumption.
+    done: dict[str, dict] = {}
+    if out.exists():
+        try:
+            for r in json.loads(out.read_text()):
+                done[r["repo"]] = r
+        except Exception:  # noqa: BLE001
+            pass  # corrupt partial file — start fresh
+
+    results: list[dict] = list(done.values())
+
     for i, entry in enumerate(entries, start=1):
         repo, base_commit = entry["repo"], entry["base_commit"]
-        print(f"[{i}/{len(entries)}] {repo}@{base_commit[:12]}")
+        if repo in done:
+            print(f"[{i}/{len(entries)}] {repo} SKIP (already done)")
+            sys.stdout.flush()
+            continue
+        print(f"[{i}/{len(entries)}] {repo}@{base_commit[:12]}", flush=True)
         start = time.monotonic()
         try:
             record = run_one(repo, base_commit)
@@ -126,8 +147,11 @@ def run_batch(manifest_path: Path) -> list[dict]:
             }
         record["seconds"] = round(time.monotonic() - start, 1)
         status = "PASS" if record.get("minimal") else "FAIL"
-        print(f"  -> {status} in {record['seconds']}s")
+        print(f"  -> {status} in {record['seconds']}s", flush=True)
         results.append(record)
+        # Write incrementally so a crash doesn't lose all progress.
+        out.write_text(json.dumps(results, indent=2) + "\n")
+
     return results
 
 
@@ -145,9 +169,8 @@ def main() -> None:
     if args.batch:
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         manifest_path = MANIFEST_DIR / args.manifest
-        results = run_batch(manifest_path)
         out = RESULTS_DIR / f"t1_{args.manifest}"
-        out.write_text(json.dumps(results, indent=2) + "\n")
+        results = run_batch(manifest_path, out)
         minimal = sum(1 for r in results if r.get("minimal"))
         maximal = sum(1 for r in results if r.get("maximal"))
         n = len(results)
@@ -155,7 +178,7 @@ def main() -> None:
         print(f"  minimal: {minimal}/{n} = {100*minimal/n:.2f}%")
         print(f"  maximal: {maximal}/{n} = {100*maximal/n:.2f}%")
         print("  (paper calibration target: ~16.33% minimal, ~2.00% maximal)")
-        print(f"results written to {out}")
+        print(f"results written to {out}", flush=True)
     else:
         if not args.base_commit:
             parser.error("--base-commit required with --repo")

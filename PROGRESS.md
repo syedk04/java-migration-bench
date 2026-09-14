@@ -192,11 +192,17 @@ property style, plugin config style, and absent settings (injects into
 These 9 repos were already Java-17-compatible with only a compiler bump.
 This is the floor — every LLM track should beat it.
 
-### T1 (OpenRewrite) — RUNNING
-PID `548`, started 2026-09-14. Log: `workdir/_logs/t1_batch_output.log`
-(gitignored). Monitor task `b4a89yee0` fires on PASS/FAIL lines.
-- Liveness: `kill -0 548 2>/dev/null && echo running`
-- Progress: `grep -c "Cloning into" workdir/_logs/t1_batch_output.log`
+### T1 (OpenRewrite) — RUNNING (restarted 2026-09-14)
+PID `317`, started 2026-09-14. Previous run (PID 548) died after 6 clones
+with no results. Fixed: incremental JSON writes (crash-safe), Python `-u`
+(unbuffered stdout so print lines land in log), resume mode (reruns skip
+already-completed repos).
+
+Log: `workdir/_logs/t1_batch_output.log` (gitignored).
+JSON: `workdir/_logs/t1_reporting_50.json` written after every repo.
+
+- Liveness: `kill -0 317 2>/dev/null && echo running`
+- Progress: `grep -c "-> " workdir/_logs/t1_batch_output.log`
 
 This batch will take several hours (OpenRewrite downloads recipe JARs
 on first run, then each repo takes a few minutes).
