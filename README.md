@@ -43,8 +43,21 @@ just satisfied the checker.
 
 ## Results
 
-Nothing yet. First numbers land after the OpenRewrite calibration run
-(zero LLM calls) - see the build log.
+<!-- RESULTS_TABLE_START -->
+| track | n | minimal | 95% CI | maximal | 95% CI |
+|---|---|---|---|---|---|
+| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 0.0% | [0.0, 7.1] |
+| T1: OpenRewrite UpgradeToJava17 | 3 | 0.0% | [0.0, 56.2] | 0.0% | [0.0, 56.2] |
+
+Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget):
+
+| method | minimal | maximal |
+|---|---|---|
+| OpenRewrite (paper n=300) | 16.3% | 2.0% |
+| Strands baseline (paper n=300) | 71.7% | 15.3% |
+| + prompt engineering (paper n=300) | — | 45.7% |
+| + PE + RAG (paper n=300) | — | 53.3% |
+<!-- RESULTS_TABLE_END -->
 
 ## Build log
 
@@ -94,3 +107,16 @@ Nothing yet. First numbers land after the OpenRewrite calibration run
   true` (that flag only affects git, not Python's Win32 calls). Fixed in
   `runner.py` by using `cmd /c rmdir /s /q` on Windows. Without the fix,
   5 repos that are actually green would have been misreported as failures.
+- S6–S9: verifier (r1 build + r2 bytecode-version check), tamper gate (r3
+  test-body invariance + r4 non-decreasing count), JaCoCo coverage check,
+  maximal dependency checker. All four are wired into every migration track.
+- S10: T0 baseline — compiler bump only (sets `maven.compiler.source/target
+  /release` to 17 in every pom.xml). **Result: 9/50 = 18.0%** minimal.
+  These are repos that were already Java-17-compatible with just a compiler
+  setting change. This is the floor for every later track.
+- S11: T1 — OpenRewrite `UpgradeToJava17` recipe applied before the same
+  verifier pipeline. Batch running; results pending.
+- S12: results store (`results/`) + README table generator
+  (`src/migration_agent/results.py`). Reads per-repo JSON logs, computes
+  Wilson 95% CIs, writes committed summary JSON, regenerates the Results
+  table above. Re-run after each batch completes.
