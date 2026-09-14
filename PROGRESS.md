@@ -185,20 +185,31 @@ property style, plugin config style, and absent settings (injects into
 
 ## In progress
 
-**T0 batch running** — PID `479`, started 2026-09-14. ~24/50 cloned as
-of last check. Log: `workdir/_logs/t0_batch_output.log` (gitignored).
-Monitor task `bazlcn758` fires on PASS/FAIL lines.
-- Liveness: `kill -0 479 2>/dev/null && echo running`
-- Progress: `grep -c "Cloning into" workdir/_logs/t0_batch_output.log`
+### T0 — DONE
+**Result: 9/50 = 18% minimal pass.** Log at
+`workdir/_logs/t0_batch_output.log`, JSON at
+`workdir/_logs/t0_reporting_50.json` (both gitignored).
+These 9 repos were already Java-17-compatible with only a compiler bump.
+This is the floor — every LLM track should beat it.
+
+### T1 (OpenRewrite) — RUNNING
+PID `548`, started 2026-09-14. Log: `workdir/_logs/t1_batch_output.log`
+(gitignored). Monitor task `b4a89yee0` fires on PASS/FAIL lines.
+- Liveness: `kill -0 548 2>/dev/null && echo running`
+- Progress: `grep -c "Cloning into" workdir/_logs/t1_batch_output.log`
+
+This batch will take several hours (OpenRewrite downloads recipe JARs
+on first run, then each repo takes a few minutes).
 
 ---
 
 ## Immediate next actions (resume here)
 
-1. **Wait for T0 batch (PID 479) to finish.** When done, note the
-   `X/50 minimal pass (T0)` line from the log.
-
-2. **Start T1 (OpenRewrite) batch:**
+1. **Check if T1 batch (PID 548) is still running or finished:**
+   ```bash
+   kill -0 548 2>/dev/null && echo running || echo done
+   ```
+   If it died early, rerun:
    ```bash
    export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
    cd "C:/Users/6ix4o/Documents/PersonalProjects/AI Repository Migration Agent"
@@ -208,15 +219,25 @@ Monitor task `bazlcn758` fires on PASS/FAIL lines.
    disown
    ```
 
-3. **HARD GATE — S11:** When T1 finishes, read
-   `workdir/_logs/t1_reporting_50.json` and report:
-   - minimal: X/50 = Y.YY% (target: ~16.33%)
-   - maximal: X/50 = Y.YY% (target: ~2.00%)
-   **Stop and show the user these numbers. Do not proceed if they are
-   materially off.** The window is roughly ±5 pp from the targets given
-   our n=50 sample vs the paper's n=300.
+2. **When T1 finishes**, read the final lines of the log:
+   ```bash
+   tail -5 workdir/_logs/t1_batch_output.log
+   ```
+   It will print:
+   ```
+   T1 results (50 repos):
+     minimal: X/50 = Y.YY%
+     maximal: X/50 = Y.YY%
+     (paper calibration target: ~16.33% minimal, ~2.00% maximal)
+   ```
 
-4. **If S11 passes:** proceed to S12 (results store + README table).
+3. **HARD GATE — S11: Stop and show the user both numbers.**
+   Do not proceed if they are materially off (roughly ±5 pp from targets
+   given n=50 vs paper's n=300). If they look reasonable, say so and ask
+   whether to continue to S12.
+
+4. **If S11 passes:** commit T0+T1 results summary to README (S12),
+   then proceed to S13 (Gemini client).
 
 ---
 
