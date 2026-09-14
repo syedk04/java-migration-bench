@@ -84,11 +84,25 @@ def load_version_index() -> dict[str, str]:
     if not VERSION_INDEX_PATH.exists():
         return {}
     import json
-    return json.loads(VERSION_INDEX_PATH.read_text(encoding="utf-8"))
+    data = json.loads(VERSION_INDEX_PATH.read_text(encoding="utf-8"))
+    # version_index.json wraps the index in {"index": {...}, "generated_at": ...}
+    return data.get("index", data) if isinstance(data, dict) else {}
 
 
 def check_maximal(repo_dir: Path, version_index: dict[str, str]) -> MaximalResult:
-    """Check that every versioned dependency is at its latest major version."""
+    """Check that every versioned dependency is at its latest major version.
+
+    Limitation: only dependencies with an explicit <version> element in pom.xml
+    are checked. Dependencies whose versions are managed through a parent POM,
+    BOM import, or <dependencyManagement> without an inline <version> are not
+    checked (they appear in skipped with note "BOM-managed"). This means repos
+    that rely entirely on BOM version management will return checked=0 and
+    pass vacuously. In practice, most Spring/Spring Boot projects do this.
+
+    This matches what the paper describes (they also use a flat pom scan), but
+    means our maximal criterion is weaker than it appears for BOM-heavy repos.
+    The result's checked==0 flag lets callers detect this case.
+    """
     outdated: list[str] = []
     skipped: list[str] = []
     checked = 0
@@ -114,8 +128,10 @@ def check_maximal(repo_dir: Path, version_index: dict[str, str]) -> MaximalResul
                 )
 
     passed = len(outdated) == 0
+    vacuous = checked == 0
     detail = (
         f"{checked} deps checked, {len(outdated)} outdated, {len(skipped)} skipped"
+        + (" [vacuous — no explicit versions found]" if vacuous else "")
     )
     return MaximalResult(
         passed=passed,

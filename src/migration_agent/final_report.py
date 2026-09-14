@@ -10,11 +10,10 @@ CLI:
     uv run python -m migration_agent.final_report --dry-run
 """
 
-import io
 import json
 import math
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Windows consoles default to cp1252 which can't handle em-dashes or arrows.
@@ -96,6 +95,12 @@ def summarise_track(track: str, label: str, filename: str) -> dict | None:
     n = len(records)
     minimal_k = sum(1 for r in records if r.get("minimal"))
     maximal_k = sum(1 for r in records if r.get("maximal"))
+    # Vacuous maximal pass: maximal=True but 0 deps were actually checked
+    # (happens when all deps are BOM/parent-managed with no explicit <version>)
+    maximal_vacuous_k = sum(
+        1 for r in records
+        if r.get("maximal") and "0 deps checked" in r.get("maximal_detail", "")
+    )
     calls = [r.get("calls_used", 0) for r in records if r.get("calls_used")]
     avg_calls = sum(calls) / len(calls) if calls else None
     min_lo, min_hi = wilson_ci(minimal_k, n)
@@ -107,6 +112,7 @@ def summarise_track(track: str, label: str, filename: str) -> dict | None:
         "n": n,
         "minimal_k": minimal_k,
         "maximal_k": maximal_k,
+        "maximal_vacuous_k": maximal_vacuous_k,
         "minimal_pct": round(100 * minimal_k / n, 2) if n else None,
         "maximal_pct": round(100 * maximal_k / n, 2) if n else None,
         "minimal_ci95": [round(min_lo, 1), round(min_hi, 1)],
@@ -175,6 +181,13 @@ def build_full_table(summaries: list[dict]) -> str:
         "> **Note:** n=50 → Wilson 95% CI ≈ ±13 pp around 50%. "
         "Enough to distinguish 2% from 45%. Not enough to distinguish 45% from 53%."
     )
+    lines.append(
+        "> **Maximal check caveat:** r5 only inspects dependencies with an explicit "
+        "`<version>` element in pom.xml. Dependencies managed through a parent POM or "
+        "BOM import (common in Spring/Spring Boot projects) are not checked and pass "
+        "vacuously. Repos with 0 explicit dep versions show '0 deps checked' in "
+        "`maximal_detail`; their maximal=True is a vacuous pass, not a verified result."
+    )
 
     return "\n".join(lines)
 
@@ -232,7 +245,7 @@ def main(dry_run: bool = False) -> None:
 
     RESULTS_DIR.mkdir(exist_ok=True)
     report = {
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "tracks": summaries,
     }
     out = RESULTS_DIR / "final_report.json"
