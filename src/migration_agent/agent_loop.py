@@ -25,6 +25,7 @@ Public API:
 """
 
 import json
+import subprocess
 import time
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -376,8 +377,7 @@ def run_agent(
     diff_path = traj_path.with_suffix(".diff")
     if minimal and dest.is_dir():
         try:
-            import subprocess as _sp
-            diff_result = _sp.run(
+            diff_result = subprocess.run(
                 ["git", "diff", "HEAD"],
                 cwd=dest,
                 capture_output=True,
