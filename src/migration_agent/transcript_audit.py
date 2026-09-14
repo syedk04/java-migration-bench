@@ -25,7 +25,6 @@ CLI:
 import json
 import os
 import sys
-import time
 from pathlib import Path
 
 from migration_agent.gemini_client import GeminiClient, GeminiMessage
@@ -273,7 +272,7 @@ if __name__ == "__main__":
     parser.add_argument("--track", required=True, choices=["T2", "T3", "T4"],
                         help="Which track to audit.")
     parser.add_argument("--results", default=None,
-                        help="Path to results JSON (default: workdir/_logs/<track>_reporting_50.json).")
+                        help="Path to results JSON (default: workdir/_logs/<track>_*.json).")
     parser.add_argument("--api-key", default=None)
     args = parser.parse_args()
 

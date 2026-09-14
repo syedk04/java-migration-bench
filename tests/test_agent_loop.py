@@ -5,21 +5,17 @@ loop logic can be exercised without network or Docker access.
 """
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from migration_agent.agent_loop import (
+    MAX_CALLS,
     AgentResult,
+    _append_traj,
     _is_done,
+    _load_traj,
     _parse_tool_call,
     _traj_record,
-    _load_traj,
-    _append_traj,
-    MAX_CALLS,
 )
-
 
 # ---------------------------------------------------------------------------
 # _parse_tool_call
@@ -145,7 +141,10 @@ def test_run_agent_done_on_first_response(
     client_instance = MockClient.return_value
     client_instance.chat.return_value = _make_mock_response("I'm done.\nDONE")
 
-    vr = MagicMock(); vr.r1_build = False; vr.r2_bytecode = False; vr.maven_tail = ""
+    vr = MagicMock()
+    vr.r1_build = False
+    vr.r2_bytecode = False
+    vr.maven_tail = ""
     mock_verify.return_value = vr
     mock_snap.return_value = MagicMock()
     mock_tamper.return_value = MagicMock(tampered=False, violations=[])
@@ -183,7 +182,10 @@ def test_run_agent_respects_max_calls(
         'TOOL: {"tool":"list_dir","path":"."}'
     )
 
-    vr = MagicMock(); vr.r1_build = False; vr.r2_bytecode = False; vr.maven_tail = ""
+    vr = MagicMock()
+    vr.r1_build = False
+    vr.r2_bytecode = False
+    vr.maven_tail = ""
     mock_verify.return_value = vr
     mock_snap.return_value = MagicMock()
     mock_tamper.return_value = MagicMock(tampered=False, violations=[])
@@ -260,7 +262,10 @@ def test_run_agent_trajectory_written(
     client_instance = MockClient.return_value
     client_instance.chat.return_value = _make_mock_response("DONE")
 
-    vr = MagicMock(); vr.r1_build = False; vr.r2_bytecode = False; vr.maven_tail = ""
+    vr = MagicMock()
+    vr.r1_build = False
+    vr.r2_bytecode = False
+    vr.maven_tail = ""
     mock_verify.return_value = vr
     mock_snap.return_value = MagicMock()
     mock_tamper.return_value = MagicMock(tampered=False)

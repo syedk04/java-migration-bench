@@ -25,8 +25,8 @@ import sys
 import time
 from pathlib import Path
 
-from migration_agent.agent_loop import run_batch, AgentResult
-from migration_agent.results import summarise, build_table
+from migration_agent.agent_loop import AgentResult, run_batch
+from migration_agent.results import build_table, summarise
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"
@@ -61,7 +61,6 @@ def _projection(results: list[AgentResult]) -> str:
     rpd = 1400
     # Time per repo assuming avg_calls at 1 call per interval.
     secs_per_repo = avg_calls * (60.0 / rpm)
-    repos_per_day = min(rpd / avg_calls, 86400 / secs_per_repo)
     lines = [
         f"  avg calls/repo : {avg_calls:.1f}",
         f"  @ 14 RPM       : {secs_per_repo/60:.1f} min/repo",

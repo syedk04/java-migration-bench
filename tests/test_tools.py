@@ -5,9 +5,6 @@ the actual Docker invocation is integration-only.
 """
 
 import textwrap
-from pathlib import Path
-
-import pytest
 
 from migration_agent.tools import (
     _truncate,
@@ -19,7 +16,6 @@ from migration_agent.tools import (
     run_maven,
     write_file,
 )
-
 
 # ---------------------------------------------------------------------------
 # _truncate helper
@@ -232,10 +228,10 @@ def test_run_maven_disallowed_goal(tmp_path):
 
 def test_run_maven_allowed_goals_accepted(tmp_path, monkeypatch):
     import subprocess as _sp
-    monkeypatch.setattr(
-        _sp, "run",
-        lambda *a, **kw: type("R", (), {"returncode": 0, "stdout": "BUILD SUCCESS", "stderr": ""})(),
-    )
+    def _fake_run(*a, **kw):
+        return type("R", (), {"returncode": 0, "stdout": "BUILD SUCCESS", "stderr": ""})()
+
+    monkeypatch.setattr(_sp, "run", _fake_run)
     for goal in ("compile", "test", "verify"):
         r = run_maven(tmp_path, goal)
         assert r["ok"] is True

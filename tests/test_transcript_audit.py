@@ -2,16 +2,13 @@
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
-
+from migration_agent.agent_loop import _traj_record
 from migration_agent.transcript_audit import (
     _AUDITOR_SYSTEM,
     traj_to_text,
 )
-from migration_agent.agent_loop import _append_traj, _traj_record
-
 
 # ---------------------------------------------------------------------------
 # traj_to_text
@@ -97,7 +94,10 @@ def test_audit_one_parses_classification(tmp_path, monkeypatch):
     import subprocess
     def fake_run(cmd, **kw):
         r = MagicMock()
-        r.stdout = "--- a/pom.xml\n+++ b/pom.xml\n@@ -1 +1 @@\n-<source>8</source>\n+<source>17</source>\n"
+        r.stdout = (
+            "--- a/pom.xml\n+++ b/pom.xml\n"
+            "@@ -1 +1 @@\n-<source>8</source>\n+<source>17</source>\n"
+        )
         return r
     monkeypatch.setattr(subprocess, "run", fake_run)
 

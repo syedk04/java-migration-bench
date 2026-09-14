@@ -184,7 +184,6 @@ def grep_files(
 
     matches: list[str] = []
     search_root = target if target.is_dir() else target.parent
-    glob_pattern = f"**/{include}" if include else "**/*"
     try:
         for fpath in sorted(search_root.rglob(include or "*")):
             if not fpath.is_file():

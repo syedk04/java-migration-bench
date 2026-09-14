@@ -1,0 +1,52 @@
+name: Verify stored diffs
+
+# Reapply committed diffs and re-run the verifier pipeline.
+# Triggered manually or on changes to diffs/ or src/.
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Track to verify (T0, T1, T2, T3, T4, or all)"
+        required: false
+        default: "all"
+  push:
+    paths:
+      - "diffs/**"
+      - "src/migration_agent/verifier.py"
+      - "src/migration_agent/tamper.py"
+      - "src/migration_agent/maximal.py"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python deps
+        run: uv sync
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build base image
+        run: |
+          docker build -t migration-agent-base:latest docker/
+          docker volume create migration-agent-m2
+
+      - name: Re-verify stored diffs
+        env:
+          VERIFY_TRACK: ${{ github.event.inputs.track || 'all' }}
+        run: |
+          uv run python -m migration_agent.verify_diffs --track "$VERIFY_TRACK"
+
+      - name: Upload verification report
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-report
+          path: results/verified_*.json
