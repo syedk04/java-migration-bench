@@ -22,8 +22,7 @@ import sys
 import time
 from pathlib import Path
 
-from migration_agent.agent_loop import run_batch, AgentResult
-from migration_agent.results import summarise, build_table
+from migration_agent.agent_loop import AgentResult, run_batch
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"

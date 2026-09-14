@@ -5,11 +5,11 @@ import math
 from pathlib import Path
 
 from migration_agent.final_report import (
+    _ci,
+    _pct,
     build_full_table,
     summarise_track,
     wilson_ci,
-    _pct,
-    _ci,
 )
 
 

@@ -44,19 +44,24 @@ just satisfied the checker.
 ## Results
 
 <!-- RESULTS_TABLE_START -->
-| track | n | minimal | 95% CI | maximal | 95% CI |
-|---|---|---|---|---|---|
-| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 0.0% | [0.0, 7.1] |
-| T1: OpenRewrite UpgradeToJava17 | 3 | 0.0% | [0.0, 56.2] | 0.0% | [0.0, 56.2] |
+### Our results (n=50, Gemini 2.5 Flash, 40-call budget)
 
-Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget):
+| track | n | minimal | 95% CI | maximal | 95% CI | avg calls |
+|---|---|---|---|---|---|---|
+| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 0.0% | [0.0, 7.1] | — |
+| T1: OpenRewrite UpgradeToJava17 | 23 | 13.0% | [4.5, 32.1] | 13.0% | [4.5, 32.1] | — |
 
-| method | minimal | maximal |
-|---|---|---|
-| OpenRewrite (paper n=300) | 16.3% | 2.0% |
-| Strands baseline (paper n=300) | 71.7% | 15.3% |
-| + prompt engineering (paper n=300) | — | 45.7% |
-| + PE + RAG (paper n=300) | — | 53.3% |
+### Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)
+
+| method | minimal | maximal | avg calls |
+|---|---|---|---|
+| OpenRewrite (paper, n=300) | 16.3% | 2.0% | — |
+| Strands baseline (paper, n=300) | 71.7% | 15.3% | 33.68 |
+| + prompt engineering (paper, n=300) | — | 45.7% | 49.22 |
+| + PE + RAG (paper, n=300) | — | 53.3% | 59.22 |
+| hybrid static+agent (paper, n=300) | — | 53.3% | 52.55 |
+
+> **Note:** n=50 → Wilson 95% CI ≈ ±13 pp around 50%. Enough to distinguish 2% from 45%. Not enough to distinguish 45% from 53%.
 <!-- RESULTS_TABLE_END -->
 
 ## Build log

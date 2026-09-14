@@ -27,7 +27,7 @@ Public API:
 import json
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from migration_agent.gemini_client import GeminiClient, GeminiMessage, GeminiRateLimitError
@@ -160,7 +160,7 @@ def _traj_record(
         "prompt_tokens": prompt_tokens,
         "completion_tokens": completion_tokens,
         "latency_ms": latency_ms,
-        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "ts": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
 
@@ -385,7 +385,7 @@ def run_agent(
         "total_completion_tokens": total_completion,
         "seconds": elapsed,
         "error": final_error,
-        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "ts": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     _append_traj(traj_path, terminal_rec)
 
@@ -423,7 +423,6 @@ def run_batch(
     api_key: str | None = None,
 ) -> list[AgentResult]:
     """Run agent loop over all repos in manifest, writing results incrementally."""
-    import sys
 
     entries = json.loads(manifest_path.read_text())
 

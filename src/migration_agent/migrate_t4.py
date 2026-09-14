@@ -28,12 +28,10 @@ import sys
 import time
 from pathlib import Path
 
-from migration_agent.agent_loop import AgentResult, run_batch
-from migration_agent.maximal import load_version_index
+from migration_agent.agent_loop import AgentResult
 from migration_agent.migrate_t3 import ENGINEERED_SYSTEM_PROMPT
-from migration_agent.results import build_table, summarise
 from migration_agent.runner import WORKDIR
-from migration_agent.version_index import collect_all_artifacts, collect_artifacts
+from migration_agent.version_index import collect_artifacts
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"

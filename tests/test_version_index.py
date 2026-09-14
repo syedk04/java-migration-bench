@@ -2,18 +2,13 @@
 
 import json
 import textwrap
-import xml.etree.ElementTree as ET
 from pathlib import Path
-from unittest.mock import patch
-
-import pytest
 
 from migration_agent.version_index import (
     _write_index,
     collect_artifacts,
     query_latest_version,
 )
-
 
 # ---------------------------------------------------------------------------
 # collect_artifacts
@@ -108,7 +103,6 @@ def test_collect_artifacts_invalid_xml(tmp_path):
 
 def test_query_returns_version(monkeypatch):
     import urllib.request
-    from io import BytesIO
 
     fake_response = {
         "response": {
@@ -127,8 +121,8 @@ def test_query_returns_version(monkeypatch):
 
 
 def test_query_returns_none_on_error(monkeypatch):
-    import urllib.request
     import urllib.error
+    import urllib.request
 
     def fail(*a, **kw):
         raise urllib.error.URLError("connection refused")

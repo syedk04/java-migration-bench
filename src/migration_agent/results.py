@@ -12,7 +12,7 @@ CLI:
 import argparse
 import json
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -72,7 +72,7 @@ def summarise(records: list[dict], track: str) -> dict:
         "maximal_pct": round(100 * maximal / n, 2) if n else None,
         "minimal_ci95": [round(min_lo, 1), round(min_hi, 1)],
         "maximal_ci95": [round(max_lo, 1), round(max_hi, 1)],
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
 
 

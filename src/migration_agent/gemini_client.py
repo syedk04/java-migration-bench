@@ -30,7 +30,7 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -96,7 +96,8 @@ class GeminiClient:
             raise ValueError(
                 "No Gemini API key. Set GEMINI_API_KEY env var or pass api_key=."
             )
-        self._model = model
+        # Allow GEMINI_MODEL env var override (used by the Flash-Lite arm).
+        self._model = os.environ.get("GEMINI_MODEL", model)
         self._temperature = temperature
         self._log_path = log_path
 
@@ -245,7 +246,7 @@ class GeminiClient:
             return
         self._log_path.parent.mkdir(parents=True, exist_ok=True)
         entry = {
-            "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "ts": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "model": self._model,
             "prompt_tokens": response.prompt_tokens,
             "completion_tokens": response.completion_tokens,

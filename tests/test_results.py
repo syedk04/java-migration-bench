@@ -1,12 +1,8 @@
 """Tests for S12: results store and table generator."""
 
-import json
 import math
 
-import pytest
-
 from migration_agent.results import build_table, summarise, wilson_ci
-
 
 # ---------------------------------------------------------------------------
 # Wilson CI
