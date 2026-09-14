@@ -199,6 +199,7 @@ class AgentResult:
     r2: bool = False
     tampered: bool = False
     r5_maximal: bool = False
+    maximal_detail: str = ""
     calls_used: int = 0
     total_prompt_tokens: int = 0
     total_completion_tokens: int = 0
@@ -219,6 +220,7 @@ class AgentResult:
             "r2": self.r2,
             "tampered": self.tampered,
             "r5_maximal": self.r5_maximal,
+            "maximal_detail": self.maximal_detail,
             "calls_used": self.calls_used,
             "total_prompt_tokens": self.total_prompt_tokens,
             "total_completion_tokens": self.total_completion_tokens,
@@ -274,6 +276,7 @@ def run_agent(
             seconds=last.get("seconds", 0.0),
             skipped=True,
             trajectory_path=str(traj_path),
+            maximal_detail=last.get("maximal_detail", ""),
         )
 
     dest = WORKDIR / safe_name
@@ -361,12 +364,14 @@ def run_agent(
     vr = verify(dest)
     tampered = False
     r5_maximal = False
+    maximal_detail = ""
     if vr.r1_build and vr.r2_bytecode:
         tr = check_tamper(snap, dest)
         tampered = tr.tampered
         index = load_version_index()
         mr = check_maximal(dest, index)
         r5_maximal = mr.passed
+        maximal_detail = mr.detail
 
     minimal = vr.r1_build and vr.r2_bytecode and not tampered
     maximal = minimal and r5_maximal
@@ -398,6 +403,7 @@ def run_agent(
         "r2": vr.r2_bytecode,
         "tampered": tampered,
         "r5_maximal": r5_maximal,
+        "maximal_detail": maximal_detail,
         "calls_used": calls_used,
         "total_prompt_tokens": total_prompt,
         "total_completion_tokens": total_completion,
@@ -417,6 +423,7 @@ def run_agent(
         r2=vr.r2_bytecode,
         tampered=tampered,
         r5_maximal=r5_maximal,
+        maximal_detail=maximal_detail,
         calls_used=calls_used,
         total_prompt_tokens=total_prompt,
         total_completion_tokens=total_completion,
