@@ -48,7 +48,7 @@ just satisfied the checker.
 
 | track | n | minimal | 95% CI | maximal | 95% CI | avg calls |
 |---|---|---|---|---|---|---|
-| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 0.0% | [0.0, 7.1] | — |
+| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 18.0% | [9.8, 30.8] | — |
 | T1: OpenRewrite UpgradeToJava17 | 23 | 13.0% | [4.5, 32.1] | 13.0% | [4.5, 32.1] | — |
 
 ### Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)
@@ -62,6 +62,7 @@ just satisfied the checker.
 | hybrid static+agent (paper, n=300) | — | 53.3% | 52.55 |
 
 > **Note:** n=50 → Wilson 95% CI ≈ ±13 pp around 50%. Enough to distinguish 2% from 45%. Not enough to distinguish 45% from 53%.
+> **Maximal check caveat:** r5 only inspects dependencies with an explicit `<version>` element in pom.xml. Dependencies managed through a parent POM or BOM import (common in Spring/Spring Boot projects) are not checked and pass vacuously. Repos with 0 explicit dep versions show '0 deps checked' in `maximal_detail`; their maximal=True is a vacuous pass, not a verified result.
 <!-- RESULTS_TABLE_END -->
 
 ## Build log
@@ -125,3 +126,31 @@ just satisfied the checker.
   (`src/migration_agent/results.py`). Reads per-repo JSON logs, computes
   Wilson 95% CIs, writes committed summary JSON, regenerates the Results
   table above. Re-run after each batch completes.
+- S13: Gemini 2.5 Flash client — stdlib urllib, 14 RPM token bucket, 1400
+  RPD daily counter with date-rollover reset, 429/503 exponential backoff.
+- S14: agent tool layer — read/write/list/grep/apply_patch/run_maven/
+  run_command. Path-traversal guard, output truncation, Maven goal allowlist,
+  shell metacharacter rejection.
+- S15: hand-rolled agent loop — 40-call budget, JSONL trajectory per repo,
+  terminal record written after verification, resumable on crash.
+- S16 prep / S19: T2 naive runner + T3 engineered prompt (Java 8→17 playbook,
+  maximal criterion, anti-test-disabling rule, JAXB/javax/Nashorn patterns).
+- S17: network monitor — parse Maven download URLs, flag unapproved hosts.
+- S18: failure taxonomy — pattern classifier for CLONE_ERROR, JAXB_MISSING,
+  JAVAX_JAKARTA, COMPILE_ERROR, TEST_FAILURE, BYTECODE_WRONG, etc.
+  T0: 9 PASS (18%), 37 BUILD_FAIL_UNKNOWN (74%), 2 BYTECODE_WRONG, 2 CLONE_ERROR.
+- S20: dependency version index — 625 artifact→version entries from Maven
+  Central REST API (snapshot 2026-09-14), committed to `data/version_index.json`.
+- S21: T4 retrieval runner — per-repo version context injected into system
+  prompt from version_index.json.
+- S22: transcript auditor — GENUINE/RETRIEVED/GAMED classifier, reads JSONL
+  trajectory + git diff blind to pass/fail outcome.
+- S23: final report generator — Wilson CIs for all tracks, audited maximal
+  section, paper reference table, writes `results/final_report.json`.
+- S24: second model arm — Flash-Lite T3-lite and T4-lite runners via
+  `GEMINI_MODEL` env var override.
+- S25: GitHub Actions CI — ruff + mypy + pytest on every push/PR.
+- S26: PR generator — renders migration diff as GitHub PR body, optionally
+  opens real PRs via REST API (dry-run by default).
+- S27: GitHub Pages static site — dark-theme HTML from `final_report.json`,
+  served from `docs/index.html`.
