@@ -126,7 +126,7 @@ fresh agent if not known:
    and the log file directly before assuming failure. A `Monitor` tool call
    polling the same PID was used as a second, more durable watcher.
 
-## Step-by-step log (S1-S5 done)
+## Step-by-step log (S1-S11 code done; S10/S11 batches running)
 
 ### S1 — repo skeleton (commit `1fd1c4c`)
 - `pyproject.toml`: package name `migration-agent` (import name
@@ -235,6 +235,55 @@ fresh agent if not known:
   above). Re-verified that repo individually after the fix: green,
   ~1m16s build time.
 - **Final result: 43/50 green under Java 8.** `.m2` volume: 2.5 GB.
+  (commit `1a363fa`)
+
+### S6 — verifier v1 (commit `561f0e1`)
+- `src/migration_agent/verifier.py`: `verify(repo_dir)` runs
+  `mvn clean verify` under Java 17 (r1) and checks compiled `.class`
+  major version == 61 (r2). Reads class headers from host filesystem
+  using `\\?\` long-path prefix on Windows. CLI for standalone use.
+- 7 unit tests. Verified on `fridujo/spring-automocker`: r1=FAIL
+  (expected — unmigrated Java 8 code), tamper gate clean.
+
+### S7 — tamper gate (commit `0e3fde2`)
+- `src/migration_agent/tamper.py`: `snapshot_tests(repo_dir)` captures
+  test method state. `check_tamper(snapshot, migrated_dir)` checks r3
+  (method presence, no @Disabled added, body hash unchanged) + r4
+  (count non-decreasing) + pom (no skipTests/excludes).
+- 10 unit tests. Smoke-tested on `fridujo/spring-automocker`: 51 methods
+  detected, self-check clean.
+
+### S8 — JaCoCo coverage check (commit `2e765a1`)
+- `src/migration_agent/coverage.py`: `measure_coverage(repo_dir,
+  java_version)` injects JaCoCo 0.8.11 via `prepare-agent + verify +
+  report`. Parses `target/site/jacoco/jacoco.xml` (multi-module aware).
+  If measurement unavailable, passes inconclusive.
+- 8 unit tests. Integration verified: 25.8% Java 8 line coverage on
+  `fridujo/spring-automocker`.
+
+### S9 — maximal check (commit `e79d005`)
+- `src/migration_agent/maximal.py`: `check_maximal(repo_dir, index)`
+  parses pom.xml files, compares declared major versions against a frozen
+  index. Unknown deps skipped (not failed). `load_version_index()` reads
+  `data/version_index.json` (built in S20; returns {} until then).
+- 9 unit tests.
+
+### S10 — T0 migration, batch runner (commit `1d876d0`)
+- `src/migration_agent/migrate_t0.py`: `apply_t0(repo_dir)` patches every
+  pom.xml to set compiler source/target/release to 17. Handles property
+  style, plugin config style, and missing settings (injects into
+  `<properties>`). Idempotent.
+- Batch runner: `--batch --manifest` writes `workdir/_logs/t0_<manifest>.json`.
+- Integration verified: `fridujo/spring-automocker` — T0 patched 1 pom,
+  injected 12, r1=False (API incompatibilities beyond compiler bump; correct).
+- **T0 batch running** (PID 479, 2026-09-14). Results pending.
+
+### S11 — OpenRewrite T1 batch runner (commit `9c028bd`, batch pending)
+- `src/migration_agent/migrate_openrewrite.py`: `run_one()` clones,
+  runs `UpgradeToJava17` recipe via `rewrite-maven-plugin`, runs full
+  pipeline (verifier + tamper + maximal). Batch runner writes
+  `workdir/_logs/t1_<manifest>.json`.
+- **HARD GATE:** batch not yet run — starts after T0 finishes.
 - Two runs were needed: first run (PID 193) died at ~22/50; restarted as
   PID 251, completed all 50.
 - **WinError 3 bug found and fixed in `runner.py`:** `shutil.rmtree` fails
@@ -254,12 +303,27 @@ fresh agent if not known:
 
 ## Immediate next actions (resume here)
 
-1. **Delete stray log files** before committing:
-   `rm workdir_warm_output.log`
-2. **Commit S5** (runner.py fix + README S5 entry + PROGRESS.md update),
-   push.
-3. **Start S6**: Verifier v1 — `mvn clean verify` passes (r1) + compiled
-   bytecode major version == 61 (r2). See S6 spec below.
+**S10 T0 batch is running** (PID 479, started 2026-09-14). Monitor task
+`bazlcn758` watches it. Log: `workdir/_logs/t0_batch_output.log`.
+Liveness: `kill -0 479 2>/dev/null && echo running`.
+
+When T0 batch finishes:
+1. Read `workdir/_logs/t0_reporting_50.json` — record T0 minimal count.
+2. Start T1 (OpenRewrite) batch:
+   ```
+   export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
+   cd "C:/Users/.../AI Repository Migration Agent"
+   nohup uv run python -m migration_agent.migrate_openrewrite --batch \
+     --manifest reporting_50.json > workdir/_logs/t1_batch_output.log 2>&1 &
+   disown
+   ```
+3. **HARD GATE (S11):** When T1 batch finishes, read both numbers from
+   `workdir/_logs/t1_reporting_50.json`:
+   - minimal should be near **16.33%** (~8/50)
+   - maximal should be near **2.00%** (~1/50)
+   **Stop and show these numbers before proceeding.** If they're materially
+   off, the harness is wrong.
+4. If numbers check out: proceed to S12 (results store + README table).
 
 ## Remaining steps (S6-S27, not started)
 
