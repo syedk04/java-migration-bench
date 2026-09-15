@@ -74,6 +74,11 @@ _MAX_BACKOFF_S = 60.0
 _INITIAL_BACKOFF_S = 2.0
 _MAX_RETRIES = 6
 
+# Module-level last-call timestamp — shared across all GeminiClient instances
+# so that the inter-repo gap (new client, reset _last_call_ts) doesn't cause
+# burst calls that exceed the RPM limit.
+_global_last_call_ts: float = 0.0
+
 
 # ---------------------------------------------------------------------------
 # Client
@@ -105,7 +110,6 @@ class GeminiClient:
         self._rpm = rpm
         self._rpd = rpd
         self._min_interval_s = 60.0 / rpm  # seconds between requests
-        self._last_call_ts: float = 0.0
 
         # Daily counter — resets when the date changes.
         self._today: date = date.today()
@@ -161,11 +165,16 @@ class GeminiClient:
             )
 
     def _throttle_rpm(self) -> None:
-        """Sleep if we are calling faster than the RPM limit."""
-        elapsed = time.monotonic() - self._last_call_ts
+        """Sleep if we are calling faster than the RPM limit.
+
+        Uses a module-level timestamp so the limit is respected across
+        multiple GeminiClient instances (one per repo in a batch run).
+        """
+        global _global_last_call_ts
+        elapsed = time.monotonic() - _global_last_call_ts
         if elapsed < self._min_interval_s:
             time.sleep(self._min_interval_s - elapsed)
-        self._last_call_ts = time.monotonic()
+        _global_last_call_ts = time.monotonic()
 
     def _build_payload(
         self,
