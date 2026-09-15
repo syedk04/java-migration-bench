@@ -65,7 +65,7 @@ class GeminiRateLimitError(GeminiError):
 # Internal defaults
 # ---------------------------------------------------------------------------
 
-_DEFAULT_MODEL = "gemini-2.5-flash"
+_DEFAULT_MODEL = "gemini-3.6-flash"
 _DEFAULT_RPM = 14
 _DEFAULT_RPD = 1400
 _BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"

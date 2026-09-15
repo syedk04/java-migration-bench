@@ -127,6 +127,8 @@ def _projection(results: list[AgentResult]) -> str:
         return ""
     total_calls = sum(r.calls_used for r in results)
     avg_calls = total_calls / len(results)
+    if avg_calls == 0:
+        return "  (no LLM calls made — API error during pilot)"
     rpm = 14
     rpd = 1400
     secs_per_repo = avg_calls * (60.0 / rpm)

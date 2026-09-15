@@ -4,7 +4,7 @@ Reruns T3 and T4 with Flash-Lite (smaller/cheaper model) to measure whether
 the engineered prompt and retrieval gains hold on a weaker model.
 
 Flash-Lite free tier: same 14 RPM / 1400 RPD as Flash — budget identical.
-Model ID: gemini-2.5-flash-lite-preview-06-17  (latest Flash-Lite as of Aug 2025)
+Model ID: gemini-3.5-flash-lite  (updated from gemini-2.5-flash-lite-preview-06-17)
 
 CLI:
     uv run python -m migration_agent.migrate_t24_lite \\
@@ -32,7 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"
 LOGS_DIR = REPO_ROOT / "workdir" / "_logs"
 
-_FLASH_LITE_MODEL = "gemini-2.5-flash-lite-preview-06-17"
+_FLASH_LITE_MODEL = "gemini-3.5-flash-lite"
 
 _TRACK_CONFIG = {
     "T3-lite": {
@@ -53,6 +53,8 @@ def _projection(results: list[AgentResult]) -> str:
         return ""
     total_calls = sum(r.calls_used for r in results)
     avg_calls = total_calls / len(results)
+    if avg_calls == 0:
+        return "  (no LLM calls made — API error during pilot)"
     rpm, rpd = 14, 1400
     secs_per_repo = avg_calls * (60.0 / rpm)
     return (

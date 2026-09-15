@@ -68,21 +68,24 @@ _TOOL_SPECS: dict[str, tuple] = {
 }
 
 _TOOL_DESCRIPTIONS = """\
-Available tools (call with JSON on a line starting with TOOL:):
+To call a tool, output EXACTLY this format on its own line (the full JSON \
+object immediately after "TOOL: "):
 
-  read_file     {"tool":"read_file","path":"<rel-path>"}
-  write_file    {"tool":"write_file","path":"<rel-path>","content":"<text>"}
-  list_dir      {"tool":"list_dir","path":"<rel-path>"}
-  grep          {"tool":"grep","pattern":"<regex>","path":".","include":"*.java"}
-  apply_patch   {"tool":"apply_patch","patch":"<unified-diff>"}
-  run_maven     {"tool":"run_maven","goal":"compile|test|verify"}
-  run_command   {"tool":"run_command","command":"<cmd>","args":["..."]}
+  TOOL: {"tool":"list_dir","path":"."}
+  TOOL: {"tool":"read_file","path":"pom.xml"}
+  TOOL: {"tool":"write_file","path":"pom.xml","content":"<full-file-text>"}
+  TOOL: {"tool":"grep","pattern":"<source>","path":".","include":"*.java"}
+  TOOL: {"tool":"apply_patch","patch":"<unified-diff>"}
+  TOOL: {"tool":"run_maven","goal":"verify"}
+  TOOL: {"tool":"run_command","command":"find","args":[".","- name","pom.xml"]}
 
-To finish, output: DONE
+When migration is complete output exactly: DONE
 
-All paths are relative to the repository root.
-apply_patch expects a standard unified diff (--- / +++ / @@ hunks).
-run_maven runs under Java 17 inside the sandbox container.
+Rules:
+- Each response must contain exactly one TOOL: line OR the word DONE.
+- All paths are relative to the repository root (/workspace).
+- apply_patch uses standard unified diff (--- a/ +++ b/ @@ hunks).
+- run_maven runs under Java 17 in the sandbox; goal must be compile, test, or verify.
 """
 
 
@@ -341,9 +344,7 @@ def run_agent(
         )
         turn += 1
 
-        if done or (not tool_call and calls_used >= 2):
-            # Model declared done, or gave a non-tool response after at least
-            # one turn — treat as finished.
+        if done:
             break
 
         if tool_call:
@@ -358,6 +359,16 @@ def run_agent(
                 traj_path,
                 _traj_record(turn, "tool_result", result_text, tool_result=result),
             )
+            turn += 1
+        else:
+            # Model gave a non-tool, non-DONE response. Add a nudge so the
+            # next API call doesn't end on a model turn (HTTP 400).
+            nudge = (
+                "Please respond with exactly one TOOL: line or output DONE. "
+                "Example: TOOL: {\"tool\":\"list_dir\",\"path\":\".\"}"
+            )
+            messages.append(GeminiMessage(role="user", content=nudge))
+            _append_traj(traj_path, _traj_record(turn, "user", nudge))
             turn += 1
 
     # --- Verification phase ---
