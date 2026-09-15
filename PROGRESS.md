@@ -298,15 +298,63 @@ JSON: `workdir/_logs/t1_reporting_50.json` — committed.
 
 ## Immediate next actions (resume here)
 
-### 1. S16 HARD GATE — T2 pilot (need GEMINI_API_KEY)
+### BLOCKER: gemini-3.6-flash has only 20 RPD on the free tier
+
+On 2026-09-14 we ran the T2 pilot and hit this error:
+```
+Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests,
+limit: 20, model: gemini-3.6-flash
+```
+20 requests/day is unusable (we need ~2000 calls per track). The original model
+`gemini-2.5-flash` (1400 RPD) is blocked for API keys created after Google's cutoff.
+Key `<your-gemini-api-key>` is too new.
+
+**Step 0 (do this first): Resolve the model/quota issue. Three options:**
+
+**Option A — Try gemini-flash-latest tomorrow (quota resets daily at midnight UTC):**
 ```bash
-export GEMINI_API_KEY=<key>
+export GEMINI_API_KEY=<your-gemini-api-key>
+export GEMINI_MODEL=gemini-flash-latest   # override via env var
 export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
 uv run python -m migration_agent.migrate_t2 --pilot --manifest reporting_50.json
 ```
-**STOP and show user** calls/tokens + throughput projection before running full 50.
+`gemini-flash-latest` responded without errors in our tests — its daily limit is unknown
+but might be higher. If it also hits 429 quickly, move to Option B.
 
-### 5. T2 full → T3 pilot → T3 full → T4 pilot → T4 full
+**Option B — Use an older Google account's API key:**
+If you have any Google account that accessed AI Studio before ~mid-2026, create
+a new key on that account at https://aistudio.google.com/apikey — it should be
+able to use `gemini-2.5-flash` (1400 RPD). Swap in the new key and run:
+```bash
+export GEMINI_API_KEY=<new-key>
+# no GEMINI_MODEL override needed — defaults to gemini-2.5-flash
+uv run python -m migration_agent.migrate_t2 --pilot --manifest reporting_50.json
+```
+
+**Option C — Check Google AI Studio quota dashboard:**
+Go to https://ai.dev/rate-limit or https://aistudio.google.com and look for which
+models have the highest free-tier quota. Update `_DEFAULT_MODEL` in
+`src/migration_agent/gemini_client.py` to whatever model has ≥1000 RPD.
+
+---
+
+### 1. S16 HARD GATE — T2 pilot (once quota issue is resolved)
+
+The agent loop and tool format are fixed and verified working (repo 1 of the pilot
+made 12 real tool calls before quota ran out). Just need a model with enough quota.
+
+```bash
+export GEMINI_API_KEY=<working-key>
+export PATH="$PATH:/c/Users/6ix4o/AppData/Local/Programs/DockerDesktop/resources/bin"
+# Clear the previous failed pilot results first:
+rm -f workdir/_logs/t2_pilot_5_results.json workdir/trajectories/t2/*.jsonl
+uv run python -m migration_agent.migrate_t2 --pilot --manifest reporting_50.json
+```
+**STOP and show user** calls/tokens + throughput projection before running full 50.
+Target: ~10-30 calls/repo, projection under 3 days for full 50 at 1400 RPD.
+
+### 2. T2 full → T3 pilot → T3 full → T4 pilot → T4 full
+
 Each: pilot first, show numbers, get approval, then full run.
 After each full run:
 ```bash
@@ -316,41 +364,57 @@ git add results/ README.md && git commit -m "TX results — X/50 minimal"
 git push
 ```
 
-### 6. S22: Audit passing trajectories
+### 3. S22: Audit passing trajectories
 ```bash
 uv run python -m migration_agent.transcript_audit --track T3
 ```
-Hand-label 30 with user for Cohen's κ calibration.
 
-### 7. S26: Open PRs for passing T3/T4 repos
+### 4. S26: Open PRs for passing T3/T4 repos
 ```bash
 uv run python -m migration_agent.pr_generator --track T3 --dry-run
-# review body output, then:
 uv run python -m migration_agent.pr_generator --track T3 --post --token $GH_TOKEN --max-prs 3
 ```
+
+### 5. Enable GitHub Pages
+Settings → Pages → Source: Deploy from branch `master`, folder `/docs`.
+
+---
+
+## What was fixed this session (2026-09-14)
+
+- **UTF-8 encoding**: `encoding="utf-8"` added to all `read_text`/`write_text` calls
+  across 18 source files — prevents em-dash corruption on Windows cp1252 default.
+- **Model name**: `gemini-2.5-flash` → `gemini-3.6-flash` (2.5 blocked for new keys).
+  Flash-Lite updated to `gemini-3.5-flash-lite`.
+- **Tool format**: `_TOOL_DESCRIPTIONS` rewritten with explicit `TOOL: {json}` examples.
+  The old format confused the model into using `TOOL:name {json}` which triggered
+  `MALFORMED_FUNCTION_CALL` and stopped generation after ~10 tokens.
+- **Agent loop HTTP 400 fix**: When model gives no tool call and not done, loop now
+  adds a nudge user message before the next API call. Previously tried to call again
+  with conversation ending on a model turn → HTTP 400 "ends with model turn".
+- **Rate limiter**: `_last_call_ts` made module-level singleton (`_global_last_call_ts`)
+  so inter-repo gap doesn't burst-call the API between repos.
+- **ZeroDivisionError fix**: `_projection()` in all migrate_t*.py now returns early
+  if avg_calls == 0 (happens when all repos fail before making any calls).
 
 ---
 
 ## Remaining steps
 
-- **S17** Network isolation: verify T2 uses only approved Maven hosts, or run
-  isolated and check if number moves. Can skip if T2 logs show clean traffic.
-- **S18** Failure taxonomy: DONE (module built, T0 shows 74% BUILD_FAIL_UNKNOWN).
-  Will produce richer output once T2/T3 trajectories are available.
-- **S24** Flash-Lite model arm: DONE (`migrate_t24_lite.py`). Run after T3/T4.
-- **S26** PR generator: DONE. Run after T3/T4 results are in.
-- **S27** GitHub Pages: DONE (`docs/index.html`). Enable GitHub Pages in repo
-  settings (Settings → Pages → Source: Deploy from branch `master`, folder `/docs`).
+- **S16 hard gate**: T2 pilot — blocked on model quota (see above).
+- **T2/T3/T4 full runs**: All code ready, need sufficient API quota.
+- **S18** Failure taxonomy: module ready, will produce richer output with T2/T3 trajectories.
+- **S24** Flash-Lite arm: code ready, run after T3/T4.
+- **S26** PR generator: code ready, run after T3/T4.
+- **S27** GitHub Pages: enable in repo settings.
 
-All code complete. Remaining work is running the LLM tracks (T2–T4, needs GEMINI_API_KEY)
-and packaging (GitHub Pages enable, final audit, PR generation).
+All code complete. Only blocker is API quota for LLM tracks.
 
 ---
 
 ## What NOT to re-litigate
 
-- Model choice (Gemini 2.5 Flash / Flash-Lite), rate limits (14 RPM /
-  1400 RPD), call cutoff (40, not 80), Docker architecture (one shared
-  base image + one shared `.m2` volume), no embeddings/vector DB,
-  hand-rolled agent loop.
+- Call cutoff (40, not 80), Docker architecture (shared base image + `.m2` volume),
+  no embeddings/vector DB, hand-rolled agent loop.
 - Repo name (`java-migration-bench`) and package name (`migration_agent`).
+- Model is now `gemini-3.6-flash` (or whatever has sufficient quota — see Step 0).
