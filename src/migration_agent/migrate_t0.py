@@ -23,6 +23,7 @@ import re
 import time
 from pathlib import Path
 
+from migration_agent.maximal import check_maximal_effective, load_version_index
 from migration_agent.runner import WORKDIR, clone_at_commit
 from migration_agent.verifier import verify
 
@@ -151,8 +152,15 @@ def run_batch(manifest_path: Path) -> list[dict]:
             record["r2_detail"] = vr.r2_detail
             if not vr.r1_build:
                 record["tail"] = vr.maven_tail[-1500:]
+            # T0 never touches tests, so no tamper check; r5 only matters
+            # when minimal passed (maximal = minimal and r5).
+            if record["minimal"]:
+                mr = check_maximal_effective(dest, load_version_index())
+                record["r5_maximal"] = mr.passed
+                record["maximal_detail"] = mr.detail
+            record["maximal"] = record["minimal"] and record.get("r5_maximal", False)
         except Exception as exc:  # noqa: BLE001
-            record["r1"] = record["r2"] = record["minimal"] = False
+            record["r1"] = record["r2"] = record["minimal"] = record["maximal"] = False
             record["error"] = str(exc)
         record["seconds"] = round(time.monotonic() - start, 1)
         status = "PASS" if record.get("minimal") else "FAIL"

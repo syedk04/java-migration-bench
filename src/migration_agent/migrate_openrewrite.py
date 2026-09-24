@@ -27,7 +27,7 @@ import sys
 import time
 from pathlib import Path
 
-from migration_agent.maximal import check_maximal, load_version_index
+from migration_agent.maximal import check_maximal_effective, load_version_index
 from migration_agent.runner import IMAGE, M2_VOLUME, WORKDIR, clone_at_commit
 from migration_agent.tamper import check_tamper, snapshot_tests
 from migration_agent.verifier import verify
@@ -99,9 +99,9 @@ def run_one(repo: str, base_commit: str) -> dict:
         tr = check_tamper(snap, dest)
         record["tampered"] = tr.tampered
         record["tamper_violations"] = tr.violations
-        # maximal check (requires version index — skipped until S20)
+        # r5 on resolved versions (mvn dependency:tree) vs the paper reference
         index = load_version_index()
-        mr = check_maximal(dest, index)
+        mr = check_maximal_effective(dest, index)
         record["r5_maximal"] = mr.passed
         record["maximal_detail"] = mr.detail
     else:

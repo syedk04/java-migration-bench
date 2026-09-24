@@ -32,7 +32,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from migration_agent.gemini_client import GeminiClient, GeminiMessage, GeminiRateLimitError
-from migration_agent.maximal import check_maximal, load_version_index
+from migration_agent.maximal import check_maximal_effective, load_version_index
 from migration_agent.runner import WORKDIR, clone_at_commit
 from migration_agent.tamper import check_tamper, snapshot_tests
 from migration_agent.tools import (
@@ -380,7 +380,7 @@ def run_agent(
         tr = check_tamper(snap, dest)
         tampered = tr.tampered
         index = load_version_index()
-        mr = check_maximal(dest, index)
+        mr = check_maximal_effective(dest, index)
         r5_maximal = mr.passed
         maximal_detail = mr.detail
 

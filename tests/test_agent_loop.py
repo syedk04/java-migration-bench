@@ -126,7 +126,7 @@ def _make_mock_response(text: str, prompt_tokens: int = 10, completion_tokens: i
 @patch("migration_agent.agent_loop.snapshot_tests")
 @patch("migration_agent.agent_loop.verify")
 @patch("migration_agent.agent_loop.check_tamper")
-@patch("migration_agent.agent_loop.check_maximal")
+@patch("migration_agent.agent_loop.check_maximal_effective")
 @patch("migration_agent.agent_loop.load_version_index")
 @patch("migration_agent.agent_loop.GeminiClient")
 def test_run_agent_done_on_first_response(
@@ -166,7 +166,7 @@ def test_run_agent_done_on_first_response(
 @patch("migration_agent.agent_loop.snapshot_tests")
 @patch("migration_agent.agent_loop.verify")
 @patch("migration_agent.agent_loop.check_tamper")
-@patch("migration_agent.agent_loop.check_maximal")
+@patch("migration_agent.agent_loop.check_maximal_effective")
 @patch("migration_agent.agent_loop.load_version_index")
 @patch("migration_agent.agent_loop.GeminiClient")
 def test_run_agent_respects_max_calls(
@@ -208,7 +208,7 @@ def test_run_agent_respects_max_calls(
 @patch("migration_agent.agent_loop.snapshot_tests")
 @patch("migration_agent.agent_loop.verify")
 @patch("migration_agent.agent_loop.check_tamper")
-@patch("migration_agent.agent_loop.check_maximal")
+@patch("migration_agent.agent_loop.check_maximal_effective")
 @patch("migration_agent.agent_loop.load_version_index")
 @patch("migration_agent.agent_loop.GeminiClient")
 def test_run_agent_skips_completed_trajectory(
@@ -248,7 +248,7 @@ def test_run_agent_skips_completed_trajectory(
 @patch("migration_agent.agent_loop.snapshot_tests")
 @patch("migration_agent.agent_loop.verify")
 @patch("migration_agent.agent_loop.check_tamper")
-@patch("migration_agent.agent_loop.check_maximal")
+@patch("migration_agent.agent_loop.check_maximal_effective")
 @patch("migration_agent.agent_loop.load_version_index")
 @patch("migration_agent.agent_loop.GeminiClient")
 def test_run_agent_trajectory_written(

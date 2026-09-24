@@ -11,10 +11,10 @@ upstream evaluator).
 
 Usage:
 
-    from migration_agent.maximal import load_version_index, check_maximal
+    from migration_agent.maximal import load_version_index, check_maximal_effective
 
     index = load_version_index()          # paper reference by default
-    result = check_maximal(repo_dir, index)
+    result = check_maximal_effective(repo_dir, index)  # runs mvn dependency:tree
 """
 
 import re
