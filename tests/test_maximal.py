@@ -381,7 +381,7 @@ def test_effective_ignores_undeclared_and_transitive():
 
 
 def test_effective_newer_major_passes():
-    tree = "[INFO] \- org.springframework.boot:spring-boot-starter-web:jar:4.0.0:compile\n"
+    tree = r"[INFO] \- org.springframework.boot:spring-boot-starter-web:jar:4.0.0:compile" + "\n"
     r = check_effective_versions(
         tree, {"org.springframework.boot:spring-boot-starter-web"}, _REF
     )
