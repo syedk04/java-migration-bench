@@ -201,3 +201,47 @@ def test_unknown_dep_detail_is_vacuous():
         result = check_maximal(root, _INDEX)
         assert result.checked == 0
         assert "vacuous" in result.detail
+
+
+# Real-world pom header: default namespace + xsi:schemaLocation. The old
+# parser regex-stripped xmlns declarations, leaving xsi: unbound, so every
+# pom like this silently parsed to zero deps and maximal passed vacuously.
+_POM_REAL_HEADER = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>test</groupId><artifactId>test</artifactId><version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>5.3.30</version>
+    </dependency>
+  </dependencies>
+</project>
+"""
+
+
+def test_parse_real_pom_header():
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "pom.xml"
+        p.write_text(_POM_REAL_HEADER, encoding="utf-8")
+        assert _parse_pom_deps(p) == [("org.springframework", "spring-core", "5.3.30")]
+
+
+def test_real_pom_header_outdated_fails():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, _POM_REAL_HEADER)
+        result = check_maximal(root, _INDEX)
+        assert not result.passed
+        assert result.checked == 1
+        assert "vacuous" not in result.detail
+
+
+def test_unparseable_pom_is_reported_not_silent():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, "<project><dependencies></project>")
+        result = check_maximal(root, _INDEX)
+        assert result.checked == 0
+        assert any("unparseable pom" in s for s in result.skipped)

@@ -48,18 +48,20 @@ def _parse_pom_deps(pom_path: Path) -> list[tuple[str, str, str]]:
 
     Skips entries with property-placeholder versions (${...}) since we
     can't resolve them without a full Maven build.
+
+    Raises ET.ParseError if the pom is not well-formed XML.
     """
     text = pom_path.read_text(encoding="utf-8", errors="replace")
-    # Strip DOCTYPE and namespace declarations for simpler parsing
     text = re.sub(r"<!DOCTYPE[^>]+>", "", text)
-    text = re.sub(r'\s+xmlns(?::\w+)?="[^"]*"', "", text)
-    try:
-        root = ET.fromstring(text)
-    except ET.ParseError:
-        return []
+    # Parse with namespaces intact and strip them from tags afterwards.
+    # (Regex-stripping xmlns declarations left xsi:schemaLocation with an
+    # unbound prefix, so nearly every real pom failed to parse.)
+    root = ET.fromstring(text)
 
     deps: list[tuple[str, str, str]] = []
-    for dep in root.iter("dependency"):
+    for dep in root.iter():
+        if _strip_ns(dep.tag) != "dependency":
+            continue
         children = {_strip_ns(c.tag): (c.text or "").strip() for c in dep}
         g = children.get("groupId", "")
         a = children.get("artifactId", "")
@@ -108,7 +110,12 @@ def check_maximal(repo_dir: Path, version_index: dict[str, str]) -> MaximalResul
     checked = 0
 
     for pom in repo_dir.rglob("pom.xml"):
-        for g, a, v in _parse_pom_deps(pom):
+        try:
+            deps = _parse_pom_deps(pom)
+        except ET.ParseError:
+            skipped.append(f"{pom.relative_to(repo_dir).as_posix()} (unparseable pom)")
+            continue
+        for g, a, v in deps:
             coord = f"{g}:{a}"
             latest = version_index.get(coord)
             if latest is None:
