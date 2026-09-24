@@ -190,3 +190,107 @@ def check_maximal(repo_dir: Path, version_index: dict[str, str]) -> MaximalResul
         checked=checked,
         detail=detail,
     )
+
+
+# ---------------------------------------------------------------------------
+# Effective (resolved) versions — mirrors upstream eval_utils.check_version
+# ---------------------------------------------------------------------------
+
+_TREE_DIRECT_PREFIXES = ("[INFO] +- ", "[INFO] \\- ")
+
+
+def parse_dependency_tree(output: str) -> list[tuple[str, str]]:
+    """Return (groupId:artifactId, version) for every direct dependency.
+
+    Reads `mvn dependency:tree` output the same way the MigrationBench
+    evaluator does: top-level `+- ` / `\\- ` lines whose coordinate is
+    g:a:type:version:scope. Coordinates with a classifier (6 parts) are
+    skipped, as upstream does. One entry per module occurrence.
+    """
+    deps: list[tuple[str, str]] = []
+    for line in output.splitlines():
+        if not line.startswith(_TREE_DIRECT_PREFIXES):
+            continue
+        parts = line.split(" ")[-1].strip().split(":")
+        if len(parts) != 5:
+            continue
+        deps.append((f"{parts[0]}:{parts[1]}", parts[3]))
+    return deps
+
+
+def declared_coords(repo_dir: Path) -> set[str]:
+    """Every groupId:artifactId named in a <dependency> in any repo pom."""
+    coords: set[str] = set()
+    for pom in repo_dir.rglob("pom.xml"):
+        try:
+            root = _load_pom(pom)
+        except ET.ParseError:
+            continue
+        for dep in root.iter():
+            if _strip_ns(dep.tag) != "dependency":
+                continue
+            c = {_strip_ns(x.tag): (x.text or "").strip() for x in dep}
+            if c.get("groupId") and c.get("artifactId"):
+                coords.add(f"{c['groupId']}:{c['artifactId']}")
+    return coords
+
+
+def check_effective_versions(
+    tree_output: str, declared: set[str], reference: dict[str, str]
+) -> MaximalResult:
+    """r5 on resolved versions: every declared direct dep in *reference* must
+    resolve to a major version >= the reference major.
+
+    Unlike the static scan this also scores versions that come from a
+    parent POM, a BOM import, or a property — whatever Maven actually used.
+    Deviation from upstream: when a coordinate appears in several modules,
+    every occurrence is checked (upstream keeps the last one it sees).
+    """
+    outdated: list[str] = []
+    skipped: list[str] = []
+    checked = 0
+    for coord, version in parse_dependency_tree(tree_output):
+        if coord not in declared:
+            continue
+        expected = reference.get(coord)
+        if expected is None:
+            skipped.append(coord)
+            continue
+        have, want = _major(version), _major(expected)
+        if have is None or want is None:
+            skipped.append(f"{coord} (unparseable version)")
+            continue
+        checked += 1
+        if have < want:
+            outdated.append(
+                f"{coord} resolved {version} (major {have}), "
+                f"reference {expected} (major {want})"
+            )
+    vacuous = checked == 0
+    detail = (
+        f"effective: {checked} deps checked, {len(outdated)} outdated, "
+        f"{len(skipped)} skipped"
+        + (" [vacuous — no reference deps resolved]" if vacuous else "")
+    )
+    return MaximalResult(
+        passed=not outdated, outdated=outdated, skipped=skipped,
+        checked=checked, detail=detail,
+    )
+
+
+def check_maximal_effective(
+    repo_dir: Path, reference: dict[str, str], java_version: int = 17
+) -> MaximalResult:
+    """Run `mvn dependency:tree` in the sandbox and score r5 on its output.
+
+    If dependency:tree fails, r5 fails — same as upstream.
+    """
+    from migration_agent.runner import run_dependency_tree
+
+    proc = run_dependency_tree(repo_dir, java_version)
+    if proc.returncode != 0:
+        return MaximalResult(
+            passed=False, outdated=[], skipped=[], checked=0,
+            detail=f"effective: mvn dependency:tree failed (exit {proc.returncode})",
+        )
+    return check_effective_versions(proc.stdout, declared_coords(repo_dir), reference)

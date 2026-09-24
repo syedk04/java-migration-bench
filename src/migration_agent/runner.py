@@ -65,8 +65,20 @@ def clone_at_commit(repo: str, base_commit: str, dest: Path) -> None:
 
 def run_maven_verify(repo_dir: Path, java_version: int = 8) -> subprocess.CompletedProcess:
     """Run `mvn clean verify` for `repo_dir` inside the sandbox container."""
+    return run_maven_goals(repo_dir, "clean verify", java_version)
+
+
+def run_dependency_tree(repo_dir: Path, java_version: int = 17) -> subprocess.CompletedProcess:
+    """Run `mvn dependency:tree` (resolved versions, used by the r5 check)."""
+    return run_maven_goals(repo_dir, "dependency:tree", java_version)
+
+
+def run_maven_goals(
+    repo_dir: Path, goals: str, java_version: int = 8
+) -> subprocess.CompletedProcess:
+    """Run `mvn -B <goals>` for `repo_dir` inside the sandbox container."""
     switch = "" if java_version == 8 else f". use-java.sh {java_version} && "
-    command = f"{switch}cd /workspace && mvn -B clean verify"
+    command = f"{switch}cd /workspace && mvn -B {goals}"
     # 600 s hard wall — Maven builds shouldn't take more than 10 min.
     return subprocess.run(
         [
@@ -74,7 +86,7 @@ def run_maven_verify(repo_dir: Path, java_version: int = 8) -> subprocess.Comple
             "run",
             "--rm",
             "-v",
-            f"{repo_dir}:/workspace",
+            f"{repo_dir.resolve()}:/workspace",
             "-v",
             f"{M2_VOLUME}:/root/.m2",
             IMAGE,

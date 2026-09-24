@@ -330,3 +330,65 @@ def test_property_from_parent_pom_in_repo():
         assert not result.passed
         assert result.checked == 1
         assert "guava" in result.outdated[0]
+
+
+# --- effective versions (mvn dependency:tree) ---
+
+from migration_agent.maximal import (  # noqa: E402
+    check_effective_versions,
+    declared_coords,
+    parse_dependency_tree,
+)
+
+_TREE = r"""[INFO] --- dependency:3.6.1:tree (default-cli) @ demo ---
+[INFO] com.example:demo:jar:1.0
+[INFO] +- org.springframework.boot:spring-boot-starter-web:jar:2.7.0:compile
+[INFO] |  +- org.springframework:spring-web:jar:5.3.20:compile
+[INFO] |  \- org.springframework:spring-core:jar:5.3.20:compile
+[INFO] +- io.netty:netty-tcnative:jar:linux-x86_64:2.0.0:compile
+[INFO] \- junit:junit:jar:4.13.2:test
+[INFO]    \- org.hamcrest:hamcrest-core:jar:1.3:test
+[INFO] BUILD SUCCESS
+"""
+
+_REF = {
+    "org.springframework.boot:spring-boot-starter-web": "3.3.4",
+    "org.springframework:spring-core": "6.1.13",
+    "junit:junit": "4.13.2",
+}
+
+
+def test_parse_dependency_tree_direct_only():
+    assert parse_dependency_tree(_TREE) == [
+        ("org.springframework.boot:spring-boot-starter-web", "2.7.0"),
+        ("junit:junit", "4.13.2"),
+    ]  # transitive lines and the 6-part classifier coord are ignored
+
+
+def test_effective_bom_managed_version_is_scored():
+    """A starter with no <version> in the pom still fails on its resolved 2.x."""
+    declared = {"org.springframework.boot:spring-boot-starter-web", "junit:junit"}
+    r = check_effective_versions(_TREE, declared, _REF)
+    assert not r.passed
+    assert r.checked == 2
+    assert "spring-boot-starter-web resolved 2.7.0" in r.outdated[0]
+
+
+def test_effective_ignores_undeclared_and_transitive():
+    r = check_effective_versions(_TREE, {"junit:junit"}, _REF)
+    assert r.passed
+    assert r.checked == 1
+
+
+def test_effective_newer_major_passes():
+    tree = "[INFO] \- org.springframework.boot:spring-boot-starter-web:jar:4.0.0:compile\n"
+    r = check_effective_versions(
+        tree, {"org.springframework.boot:spring-boot-starter-web"}, _REF
+    )
+    assert r.passed and r.checked == 1
+
+
+def test_declared_coords_includes_versionless_deps():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, _POM_BOM_MANAGED)
+        assert declared_coords(root) == {"org.springframework:spring-core", "junit:junit"}
