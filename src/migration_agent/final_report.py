@@ -166,7 +166,7 @@ def build_full_table(summaries: list[dict]) -> str:
             )
 
     lines.append("")
-    lines.append("### Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)")
+    lines.append("### Paper reference (n=300, 80-call budget)")
     lines.append("")
     lines.append("| method | minimal | maximal | avg calls |")
     lines.append("|---|---|---|---|")

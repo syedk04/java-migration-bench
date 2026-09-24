@@ -175,7 +175,7 @@ def generate_html(report: dict) -> str:
 </div>
 
 <div class="card">
-  <h2>Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)</h2>
+  <h2>Paper reference (n=300, 80-call budget)</h2>
   <table>
     <thead>
       <tr>

@@ -25,7 +25,7 @@ _TRACKS = [
     ("T1", "t1_reporting_50.json"),
 ]
 
-# Paper reference numbers (n=300, Claude 4.5 Sonnet, 80-call cutoff).
+# Paper reference numbers (n=300, 80-call cutoff).
 _PAPER: dict[str, dict[str, float | None]] = {
     "OpenRewrite (paper n=300)": {"minimal": 16.33, "maximal": 2.00},
     "Strands baseline (paper n=300)": {"minimal": 71.67, "maximal": 15.33},
@@ -100,7 +100,7 @@ def build_table(summaries: list[dict]) -> str:
         )
 
     rows.append("")
-    rows.append("Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget):")
+    rows.append("Paper reference (n=300, 80-call budget):")
     rows.append("")
     rows.append("| method | minimal | maximal |")
     rows.append("|---|---|---|")

@@ -16,7 +16,7 @@ real Maven repositories from Java 8 to Java 17. Two success bars matter:
   Java 17, and the compiled bytecode is actually major version 61.
 - **maximal migration**: minimal, plus every dependency is bumped to its
   latest major version. This is the hard part. On the published `selected`
-  subset (n=300, Claude 4.5 Sonnet, 80-call cutoff), maximal success drops
+  subset (n=300, 80-call cutoff), maximal success drops
   from 71.67% (minimal) to 15.33% for a plain agent, and tops out at 53.33%
   with retrieval and an 80-call budget.
 
@@ -51,7 +51,7 @@ just satisfied the checker.
 | T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 18.0% | [9.8, 30.8] | — |
 | T1: OpenRewrite UpgradeToJava17 | 50 | 10.0% | [4.3, 21.4] | 10.0% | [4.3, 21.4] | — |
 
-### Paper reference (n=300, Claude 4.5 Sonnet, 80-call budget)
+### Paper reference (n=300, 80-call budget)
 
 | method | minimal | maximal | avg calls |
 |---|---|---|---|

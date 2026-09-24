@@ -43,7 +43,7 @@ GitHub account: syedk04
 
 ## Reference numbers (verified against paper PDF, 2026-09-12)
 
-Selected subset, n=300, Claude-4.5-Sonnet, 80-call cutoff:
+Selected subset, n=300, 80-call cutoff:
 
 | method | minimal | maximal | avg calls/repo |
 |---|---|---|---|
