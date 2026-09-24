@@ -245,3 +245,72 @@ def test_unparseable_pom_is_reported_not_silent():
         result = check_maximal(root, _INDEX)
         assert result.checked == 0
         assert any("unparseable pom" in s for s in result.skipped)
+
+
+# --- property resolution ---
+
+_POM_PROPS_SAME_FILE = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>test</groupId><artifactId>test</artifactId><version>1.0</version>
+  <properties>
+    <spring.major>5</spring.major>
+    <spring.version>${spring.major}.3.30</spring.version>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+      <version>${spring.version}</version>
+    </dependency>
+  </dependencies>
+</project>
+"""
+
+
+def test_parse_resolves_nested_same_file_property():
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "pom.xml"
+        p.write_text(_POM_PROPS_SAME_FILE, encoding="utf-8")
+        assert _parse_pom_deps(p) == [("org.springframework", "spring-core", "5.3.30")]
+
+
+def test_property_version_outdated_fails():
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, _POM_PROPS_SAME_FILE)
+        result = check_maximal(root, _INDEX)
+        assert not result.passed
+        assert result.checked == 1
+
+
+def test_property_from_parent_pom_in_repo():
+    parent = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>test</groupId><artifactId>parent</artifactId><version>1.0</version>
+  <packaging>pom</packaging>
+  <properties><guava.version>20.0</guava.version></properties>
+  <modules><module>child</module></modules>
+</project>
+"""
+    child = """\
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>child</artifactId>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+  </dependencies>
+</project>
+"""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = _make_repo(tmp, parent)
+        (root / "child").mkdir()
+        (root / "child" / "pom.xml").write_text(child, encoding="utf-8")
+        result = check_maximal(root, _INDEX)
+        assert not result.passed
+        assert result.checked == 1
+        assert "guava" in result.outdated[0]

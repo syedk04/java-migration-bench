@@ -43,20 +43,56 @@ def _strip_ns(tag: str) -> str:
     return tag.split("}")[-1] if "}" in tag else tag
 
 
-def _parse_pom_deps(pom_path: Path) -> list[tuple[str, str, str]]:
-    """Return (groupId, artifactId, version) triples from a pom.xml.
+_PLACEHOLDER_RE = re.compile(r"\$\{([^}]+)\}")
 
-    Skips entries with property-placeholder versions (${...}) since we
-    can't resolve them without a full Maven build.
 
-    Raises ET.ParseError if the pom is not well-formed XML.
-    """
+def _load_pom(pom_path: Path) -> ET.Element:
+    """Parse a pom.xml. Raises ET.ParseError if it is not well-formed XML."""
     text = pom_path.read_text(encoding="utf-8", errors="replace")
     text = re.sub(r"<!DOCTYPE[^>]+>", "", text)
     # Parse with namespaces intact and strip them from tags afterwards.
     # (Regex-stripping xmlns declarations left xsi:schemaLocation with an
     # unbound prefix, so nearly every real pom failed to parse.)
-    root = ET.fromstring(text)
+    return ET.fromstring(text)
+
+
+def _pom_properties(root: ET.Element) -> dict[str, str]:
+    """Return the <properties> block of a parsed pom as a flat dict."""
+    props: dict[str, str] = {}
+    for el in root:
+        if _strip_ns(el.tag) == "properties":
+            for p in el:
+                if isinstance(p.tag, str):
+                    props[_strip_ns(p.tag)] = (p.text or "").strip()
+    return props
+
+
+def _resolve(value: str, props: dict[str, str]) -> str:
+    """Substitute ${name} placeholders from *props*, following nested refs.
+
+    Placeholders that can't be resolved are left in place.
+    """
+    for _ in range(5):
+        new = _PLACEHOLDER_RE.sub(lambda m: props.get(m.group(1), m.group(0)), value)
+        if new == value:
+            break
+        value = new
+    return value
+
+
+def _parse_pom_deps(
+    pom_path: Path, props: dict[str, str] | None = None
+) -> list[tuple[str, str, str]]:
+    """Return (groupId, artifactId, version) triples from a pom.xml.
+
+    ${...} versions are resolved from *props* (if given) overlaid with the
+    pom's own <properties>. Versions that still contain a placeholder after
+    resolution are skipped — we can't resolve them without a full Maven build.
+
+    Raises ET.ParseError if the pom is not well-formed XML.
+    """
+    root = _load_pom(pom_path)
+    merged = {**(props or {}), **_pom_properties(root)}
 
     deps: list[tuple[str, str, str]] = []
     for dep in root.iter():
@@ -65,8 +101,8 @@ def _parse_pom_deps(pom_path: Path) -> list[tuple[str, str, str]]:
         children = {_strip_ns(c.tag): (c.text or "").strip() for c in dep}
         g = children.get("groupId", "")
         a = children.get("artifactId", "")
-        v = children.get("version", "")
-        if g and a and v and not v.startswith("${"):
+        v = _resolve(children.get("version", ""), merged)
+        if g and a and v and "${" not in v:
             deps.append((g, a, v))
     return deps
 
@@ -94,24 +130,30 @@ def load_version_index() -> dict[str, str]:
 def check_maximal(repo_dir: Path, version_index: dict[str, str]) -> MaximalResult:
     """Check that every versioned dependency is at its latest major version.
 
-    Limitation: only dependencies with an explicit <version> element in pom.xml
-    are checked. Dependencies whose versions are managed through a parent POM,
-    BOM import, or <dependencyManagement> without an inline <version> are not
-    checked (they appear in skipped with note "BOM-managed"). This means repos
-    that rely entirely on BOM version management will return checked=0 and
-    pass vacuously. In practice, most Spring/Spring Boot projects do this.
+    ${...} versions are resolved from <properties>: the pom's own block first,
+    then the union of every other pom in the repo (approximates inheritance
+    from an in-repo parent without walking relativePath).
 
-    This matches what the paper describes (they also use a flat pom scan), but
-    means our maximal criterion is weaker than it appears for BOM-heavy repos.
-    The result's checked==0 flag lets callers detect this case.
+    Limitation: dependencies with no <version> at all (managed by a parent POM
+    or BOM import) are not checked. The BOM import itself is checked when its
+    version is resolvable. A repo where nothing is checkable returns checked=0
+    and passes vacuously; the detail string flags this.
     """
     outdated: list[str] = []
     skipped: list[str] = []
     checked = 0
 
-    for pom in repo_dir.rglob("pom.xml"):
+    poms = list(repo_dir.rglob("pom.xml"))
+    repo_props: dict[str, str] = {}
+    for pom in poms:
         try:
-            deps = _parse_pom_deps(pom)
+            repo_props.update(_pom_properties(_load_pom(pom)))
+        except ET.ParseError:
+            pass
+
+    for pom in poms:
+        try:
+            deps = _parse_pom_deps(pom, repo_props)
         except ET.ParseError:
             skipped.append(f"{pom.relative_to(repo_dir).as_posix()} (unparseable pom)")
             continue
