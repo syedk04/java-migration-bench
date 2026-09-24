@@ -152,10 +152,26 @@ def test_empty_index_skips_all():
 
 
 def test_load_version_index_missing_returns_empty():
-    """load_version_index returns {} when data/version_index.json doesn't exist yet."""
-    from migration_agent.maximal import VERSION_INDEX_PATH, load_version_index
-    if not VERSION_INDEX_PATH.exists():
-        assert load_version_index() == {}
+    from migration_agent.maximal import load_version_index
+    with tempfile.TemporaryDirectory() as tmp:
+        assert load_version_index(Path(tmp) / "nope.json") == {}
+
+
+def test_load_version_index_unwraps_crawl_format():
+    from migration_agent.maximal import load_version_index
+    with tempfile.TemporaryDirectory() as tmp:
+        p = Path(tmp) / "idx.json"
+        p.write_text('{"generated_at": "x", "index": {"a:b": "1.0"}}', encoding="utf-8")
+        assert load_version_index(p) == {"a:b": "1.0"}
+
+
+def test_default_index_is_paper_reference():
+    """r5 is scored against the paper's Nov-2024 list, not our 2026 crawl."""
+    from migration_agent.maximal import load_version_index
+    ref = load_version_index()
+    assert len(ref) == 240
+    assert ref["org.springframework.boot:spring-boot-starter-parent"] == "3.3.4"
+    assert ref["junit:junit"] == "4.13.2"
 
 
 _POM_BOM_MANAGED = """\

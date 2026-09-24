@@ -1,19 +1,19 @@
 """S9: Maximal check — every pom dependency at its latest major version.
 
-Uses a frozen, date-stamped snapshot of Maven Central latest versions so
-the criterion doesn't drift week to week. The snapshot is built once (S20)
-and committed; this module only reads it.
+r5 is scored against the paper's own reference list
+(data/reference/dependency_version.json, copied from MigrationBench): the
+"stable and latest major versions available on Maven Central as of
+November 2024" for the 240 most frequent dependencies in the subset.
 
-A dependency passes if its declared version == the latest major version in
-the snapshot, OR if it is absent from the snapshot (unknown artifact —
-skip rather than fail, same as the paper's treatment of private/internal
-deps).
+A dependency passes if its declared major version is >= the reference
+major, OR if it is absent from the reference (not checked — same as the
+upstream evaluator).
 
 Usage:
 
     from migration_agent.maximal import load_version_index, check_maximal
 
-    index = load_version_index()          # loads data/version_index.json
+    index = load_version_index()          # paper reference by default
     result = check_maximal(repo_dir, index)
 """
 
@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+REFERENCE_PATH = REPO_ROOT / "data" / "reference" / "dependency_version.json"
 VERSION_INDEX_PATH = REPO_ROOT / "data" / "version_index.json"
 
 # Maven version string — captures numeric prefix before any qualifier
@@ -113,17 +114,17 @@ def _major(version: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def load_version_index() -> dict[str, str]:
-    """Load the frozen version index from data/version_index.json.
+def load_version_index(path: Path = REFERENCE_PATH) -> dict[str, str]:
+    """Load a "groupId:artifactId" -> version map.
 
-    Returns a dict mapping "groupId:artifactId" -> "latestVersion".
-    Returns an empty dict if the file doesn't exist yet (pre-S20).
+    Defaults to the paper's Nov-2024 reference list, which defines r5.
+    Also accepts our own crawl (VERSION_INDEX_PATH), which wraps the map in
+    {"index": {...}, "generated_at": ...}. Returns {} if the file is missing.
     """
-    if not VERSION_INDEX_PATH.exists():
+    if not path.exists():
         return {}
     import json
-    data = json.loads(VERSION_INDEX_PATH.read_text(encoding="utf-8"))
-    # version_index.json wraps the index in {"index": {...}, "generated_at": ...}
+    data = json.loads(path.read_text(encoding="utf-8"))
     return data.get("index", data) if isinstance(data, dict) else {}
 
 
