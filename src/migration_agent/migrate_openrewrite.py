@@ -36,9 +36,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"
 RESULTS_DIR = REPO_ROOT / "workdir" / "_logs"
 
-_REWRITE_PLUGIN = "org.openrewrite.maven:rewrite-maven-plugin"
+# Pinned to the versions the reporting T1 run resolved (2026-09-14, the only
+# versions in the .m2 volume). RELEASE + -U drifts between runs, so a rerun
+# could apply a different recipe than the one that produced the T1 numbers.
+_REWRITE_PLUGIN = "org.openrewrite.maven:rewrite-maven-plugin:6.46.1"
 _REWRITE_RECIPE_COORDS = (
-    "org.openrewrite.recipe:rewrite-migrate-java:RELEASE"
+    "org.openrewrite.recipe:rewrite-migrate-java:3.42.1"
 )
 _ACTIVE_RECIPE = "org.openrewrite.java.migrate.UpgradeToJava17"
 
@@ -47,12 +50,11 @@ def run_openrewrite(repo_dir: Path) -> subprocess.CompletedProcess:
     """Run OpenRewrite UpgradeToJava17 in the sandbox container.
 
     Modifies repo_dir in place (the container writes back through the
-    volume mount). Uses -U to force plugin version resolution and avoids
-    stale RELEASE metadata.
+    volume mount). Plugin and recipe versions are pinned for reproducibility.
     """
     command = (
         "cd /workspace && "
-        f"mvn -B -U {_REWRITE_PLUGIN}:run "
+        f"mvn -B {_REWRITE_PLUGIN}:run "
         f"-Drewrite.recipeArtifactCoordinates={_REWRITE_RECIPE_COORDS} "
         f"-Drewrite.activeRecipes={_ACTIVE_RECIPE}"
     )
