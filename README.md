@@ -48,8 +48,8 @@ just satisfied the checker.
 
 | track | n | minimal | 95% CI | maximal | 95% CI | avg calls |
 |---|---|---|---|---|---|---|
-| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 18.0% | [9.8, 30.8] | — |
-| T1: OpenRewrite UpgradeToJava17 | 50 | 10.0% | [4.3, 21.4] | 10.0% | [4.3, 21.4] | — |
+| T0: compiler bump only | 50 | 18.0% | [9.8, 30.8] | 2.0% | [0.4, 10.5] | — |
+| T1: OpenRewrite UpgradeToJava17 | 50 | 10.0% | [4.3, 21.4] | 2.0% | [0.4, 10.5] | — |
 
 ### Paper reference (n=300, 80-call budget)
 
@@ -62,7 +62,7 @@ just satisfied the checker.
 | hybrid static+agent (paper, n=300) | — | 53.3% | 52.55 |
 
 > **Note:** n=50 → Wilson 95% CI ≈ ±13 pp around 50%. Enough to distinguish 2% from 45%. Not enough to distinguish 45% from 53%.
-> **Maximal check caveat:** r5 only inspects dependencies with an explicit `<version>` element in pom.xml. Dependencies managed through a parent POM or BOM import (common in Spring/Spring Boot projects) are not checked and pass vacuously. Repos with 0 explicit dep versions show '0 deps checked' in `maximal_detail`; their maximal=True is a vacuous pass, not a verified result.
+> **Maximal (r5):** scored like the paper's evaluator. `mvn dependency:tree` gives the resolved version of every direct dependency (including versions set by a parent POM or BOM), and each one on the paper's Nov-2024 reference list (240 deps, `data/reference/`) must be at or above the reference major version. Dependencies not on the list are not checked.
 <!-- RESULTS_TABLE_END -->
 
 ## Build log

@@ -285,12 +285,16 @@ These 9 repos were already Java-17-compatible with only a compiler bump.
 This is the floor — every LLM track should beat it.
 
 ### T1 (OpenRewrite) — DONE
-**Result: 5/50 = 10.0% minimal, 10.0% maximal† (all vacuous).**
-† All 5 passing repos have 0 explicit `<version>` elements (BOM-managed deps) — maximal passes vacuously.
+**Result: 5/50 = 10.0% minimal, 1/50 = 2.0% maximal** (re-scored 2026-09-27).
+The earlier 10.0% maximal was a parser bug, not BOM management: the static
+pom scan failed on `xsi:schemaLocation` and found zero deps in 238/250 poms.
+r5 now uses resolved versions (`mvn dependency:tree`) against the paper's own
+Nov-2024 reference list; see `recheck_maximal.py`. T0 re-scored the same way:
+9/50 minimal, 1/50 = 2.0% maximal.
 
 **S11 HARD GATE: PASSED.** Target was ~16.33% minimal. Our 10.0% [CI 4.3–21.4] overlaps
-paper's 16.33% [CI 12.6–20.9] at n=50 — within noise. Maximal discrepancy (10% vs 2%) is
-explained by BOM vacuous passes; documented with `†` symbol in README and site.
+paper's 16.33% [CI 12.6–20.9] at n=50 — within noise. Maximal now matches too:
+2.0% vs the paper's 2.00%.
 
 JSON: `workdir/_logs/t1_reporting_50.json` — committed.
 

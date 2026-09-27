@@ -73,8 +73,8 @@
               18.0%</td>
           <td class="num small">[9.8, 30.8]</td>
           <td class="num" style="color:#dc3545;font-weight:600">
-              18.0%†</td>
-          <td class="num small">[9.8, 30.8]</td>
+              2.0%</td>
+          <td class="num small">[0.4, 10.5]</td>
           <td class="num">—</td>
         </tr>
         <tr>
@@ -85,8 +85,8 @@
               10.0%</td>
           <td class="num small">[4.3, 21.4]</td>
           <td class="num" style="color:#dc3545;font-weight:600">
-              10.0%†</td>
-          <td class="num small">[4.3, 21.4]</td>
+              2.0%</td>
+          <td class="num small">[0.4, 10.5]</td>
           <td class="num">—</td>
         </tr>
     </tbody>
@@ -94,12 +94,10 @@
   <p class="note">
     <strong>Minimal</strong>: build green under Java 17, bytecode v61,
     all original tests present and passing.<br>
-    <strong>Maximal</strong>: minimal + every dependency at latest major version
-    (Maven Central snapshot 2026-09).<br>
-    <em>Caveat (†):</em> r5 only checks deps with explicit &lt;version&gt; in pom.xml.
-    BOM/parent-managed versions pass vacuously (0 deps checked). A † means all
-    maximal passes for this track were vacuous — no explicit dep versions found.
-    Maximal ≈ minimal until full POM resolution is implemented.
+    <strong>Maximal</strong>: minimal + every direct dependency resolved by
+    <code>mvn dependency:tree</code> at or above the major version in the paper's
+    Nov-2024 reference list (240 deps). Parent- and BOM-managed versions count.<br>
+    <em>†</em>: every maximal pass for this track checked zero reference deps.
   </p>
 </div>
 
@@ -138,7 +136,7 @@
 </div>
 
 <p class="meta">
-  Generated 2026-09-14T22:48:29Z ·
+  Generated 2026-09-27T04:23:49Z ·
   <a href="https://github.com/syedk04/java-migration-bench">syedk04/java-migration-bench</a> ·
   Paper: <a href="https://arxiv.org/abs/2505.09569">arxiv 2505.09569</a>
 </p>

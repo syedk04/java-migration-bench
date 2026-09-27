@@ -2,16 +2,16 @@
   "track": "T1",
   "n": 50,
   "minimal_count": 5,
-  "maximal_count": 5,
+  "maximal_count": 1,
   "minimal_pct": 10.0,
-  "maximal_pct": 10.0,
+  "maximal_pct": 2.0,
   "minimal_ci95": [
     4.3,
     21.4
   ],
   "maximal_ci95": [
-    4.3,
-    21.4
+    0.4,
+    10.5
   ],
-  "generated_at": "2026-09-14T22:48:26Z"
+  "generated_at": "2026-09-27T04:23:49Z"
 }

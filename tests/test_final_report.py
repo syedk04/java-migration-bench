@@ -96,3 +96,20 @@ def test_build_full_table_shows_audit_when_present():
     }
     table = build_full_table([s])
     assert "GENUINE" in table.upper() or "genuine" in table.lower()
+
+
+def test_vacuous_count_uses_marker_not_substring(tmp_path, monkeypatch):
+    """'10 deps checked' contains '0 deps checked' but is not vacuous."""
+    monkeypatch.setattr("migration_agent.final_report.LOGS_DIR", tmp_path)
+    records = [
+        {"repo": "a/x", "minimal": True, "maximal": True,
+         "maximal_detail": "effective: 10 deps checked, 0 outdated, 2 skipped"},
+        {"repo": "a/y", "minimal": True, "maximal": True,
+         "maximal_detail": "effective: 0 deps checked, 0 outdated, 1 skipped "
+                           "[vacuous — no reference deps resolved]"},
+    ]
+    (tmp_path / "t.json").write_text(json.dumps(records), encoding="utf-8")
+    s = summarise_track("T0", "T0: test", "t.json")
+    assert s is not None
+    assert s["maximal_k"] == 2
+    assert s["maximal_vacuous_k"] == 1
