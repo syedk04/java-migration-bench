@@ -95,11 +95,12 @@ def summarise_track(track: str, label: str, filename: str) -> dict | None:
     n = len(records)
     minimal_k = sum(1 for r in records if r.get("minimal"))
     maximal_k = sum(1 for r in records if r.get("maximal"))
-    # Vacuous maximal pass: maximal=True but 0 deps were actually checked
-    # (happens when all deps are BOM/parent-managed with no explicit <version>)
+    # Vacuous maximal pass: maximal=True but no reference dep was checked.
+    # Match the explicit marker; a substring test on "0 deps checked" would
+    # also match "10 deps checked".
     maximal_vacuous_k = sum(
         1 for r in records
-        if r.get("maximal") and "0 deps checked" in r.get("maximal_detail", "")
+        if r.get("maximal") and "[vacuous" in r.get("maximal_detail", "")
     )
     calls = [r.get("calls_used", 0) for r in records if r.get("calls_used")]
     avg_calls = sum(calls) / len(calls) if calls else None
@@ -182,11 +183,11 @@ def build_full_table(summaries: list[dict]) -> str:
         "Enough to distinguish 2% from 45%. Not enough to distinguish 45% from 53%."
     )
     lines.append(
-        "> **Maximal check caveat:** r5 only inspects dependencies with an explicit "
-        "`<version>` element in pom.xml. Dependencies managed through a parent POM or "
-        "BOM import (common in Spring/Spring Boot projects) are not checked and pass "
-        "vacuously. Repos with 0 explicit dep versions show '0 deps checked' in "
-        "`maximal_detail`; their maximal=True is a vacuous pass, not a verified result."
+        "> **Maximal (r5):** scored like the paper's evaluator. `mvn dependency:tree` "
+        "gives the resolved version of every direct dependency (including versions "
+        "set by a parent POM or BOM), and each one on the paper's Nov-2024 reference "
+        "list (240 deps, `data/reference/`) must be at or above the reference major "
+        "version. Dependencies not on the list are not checked."
     )
 
     return "\n".join(lines)

@@ -1,22 +1,22 @@
 {
-  "generated_at": "2026-09-14T22:48:29Z",
+  "generated_at": "2026-09-27T04:23:49Z",
   "tracks": [
     {
       "track": "T0",
       "label": "T0: compiler bump only",
       "n": 50,
       "minimal_k": 9,
-      "maximal_k": 9,
-      "maximal_vacuous_k": 9,
+      "maximal_k": 1,
+      "maximal_vacuous_k": 0,
       "minimal_pct": 18.0,
-      "maximal_pct": 18.0,
+      "maximal_pct": 2.0,
       "minimal_ci95": [
         9.8,
         30.8
       ],
       "maximal_ci95": [
-        9.8,
-        30.8
+        0.4,
+        10.5
       ],
       "avg_calls": null,
       "audit": null
@@ -26,17 +26,17 @@
       "label": "T1: OpenRewrite UpgradeToJava17",
       "n": 50,
       "minimal_k": 5,
-      "maximal_k": 5,
-      "maximal_vacuous_k": 5,
+      "maximal_k": 1,
+      "maximal_vacuous_k": 0,
       "minimal_pct": 10.0,
-      "maximal_pct": 10.0,
+      "maximal_pct": 2.0,
       "minimal_ci95": [
         4.3,
         21.4
       ],
       "maximal_ci95": [
-        4.3,
-        21.4
+        0.4,
+        10.5
       ],
       "avg_calls": null,
       "audit": null
