@@ -23,6 +23,7 @@ Return dict schema for every tool:
 """
 
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -362,7 +363,11 @@ def run_maven(repo_dir: Path, goal: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def run_command(repo_dir: Path, command: str, args: list[str]) -> dict:
-    """Run an allowlisted command in *repo_dir* on the host (not Docker).
+    """Run an allowlisted command in the sandbox container, cwd /workspace.
+
+    Runs under Java 17 in the same image as run_maven, so the agent sees the
+    Linux toolchain its prompt describes (on a Windows host, a bare `find`
+    would otherwise resolve to find.exe and `java` to whatever JDK is local).
 
     Permitted commands: java, javac, mvn, ls, find, cat, head, tail,
     grep, sed, diff, git (sub-commands: diff, status, log only).
@@ -383,15 +388,26 @@ def run_command(repo_dir: Path, command: str, args: list[str]) -> dict:
     if err:
         return _result(False, error=err)
 
+    argv = [command, *args]
+    if command == "git":
+        # Repos are checked out on the host; on Windows that means CRLF in the
+        # working tree, which Linux git would report as every line changed.
+        argv = ["git", "-c", "core.autocrlf=true", *args]
+    shell_cmd = f". use-java.sh 17 && cd /workspace && {shlex.join(argv)}"
     try:
         proc = subprocess.run(
-            [command, *args],
+            [
+                "docker", "run", "--rm",
+                "-v", f"{repo_dir.resolve()}:/workspace",
+                "-v", f"{M2_VOLUME}:/root/.m2",
+                IMAGE, "bash", "-c", shell_cmd,
+            ],
             capture_output=True,
             text=True,
-            cwd=str(repo_dir),
+            timeout=600,
         )
-    except FileNotFoundError:
-        return _result(False, error=f"Command not found on PATH: {command!r}")
+    except subprocess.TimeoutExpired:
+        return _result(False, error="Command timed out after 600 seconds")
     combined = proc.stdout + proc.stderr
     return _result(
         ok=proc.returncode == 0,

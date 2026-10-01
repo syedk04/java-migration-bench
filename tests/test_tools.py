@@ -208,12 +208,36 @@ def test_run_command_git_disallowed_subcommand(tmp_path):
     assert "not allowed" in r["error"]
 
 
-def test_run_command_git_allowed_subcommand(tmp_path):
-    # git status won't fail even on a non-repo (exits 128 with an error
-    # message, but the important thing is it's not blocked by the allowlist).
+def _capture_subprocess(monkeypatch, stdout: str = "") -> list[list[str]]:
+    import subprocess as _sp
+    seen: list[list[str]] = []
+
+    def _fake_run(args, **kw):
+        seen.append(args)
+        return type("R", (), {"returncode": 0, "stdout": stdout, "stderr": ""})()
+
+    monkeypatch.setattr(_sp, "run", _fake_run)
+    return seen
+
+
+def test_run_command_git_allowed_subcommand(tmp_path, monkeypatch):
+    seen = _capture_subprocess(monkeypatch)
     r = run_command(tmp_path, "git", ["status"])
-    # ok may be False (not a git repo), but error must not be "not in allowlist"
-    assert r["error"] is None or "not in allowlist" not in r["error"]
+    assert r["ok"] is True
+    assert seen[0][-1].endswith("cd /workspace && git -c core.autocrlf=true status")
+
+
+def test_run_command_runs_in_sandbox_container(tmp_path, monkeypatch):
+    # On a Windows host a bare `find` is find.exe; the agent must get the
+    # container's Linux tools under Java 17 instead.
+    seen = _capture_subprocess(monkeypatch, stdout="./pom.xml\n")
+    r = run_command(tmp_path, "find", [".", "-name", "*.xml"])
+    assert r["ok"] is True and "./pom.xml" in r["output"]
+    args = seen[0]
+    assert args[:3] == ["docker", "run", "--rm"]
+    assert f"{tmp_path.resolve()}:/workspace" in args
+    # glob is quoted so the container shell passes it to find unexpanded
+    assert args[-1] == ". use-java.sh 17 && cd /workspace && find . -name '*.xml'"
 
 
 # ---------------------------------------------------------------------------
