@@ -131,7 +131,7 @@ def run_maven_monitored(
         if ensure_isolated_network():
             network_args = ["--network", ISOLATED_NETWORK]
 
-    command = f". /use-java.sh 17 && cd /workspace && mvn -B clean {goal}"
+    command = f". use-java.sh 17 && cd /workspace && mvn -B clean {goal}"
     proc = subprocess.run(
         [
             "docker", "run", "--rm",

@@ -334,7 +334,7 @@ def run_maven(repo_dir: Path, goal: str) -> dict:
             f"Goal {goal!r} not allowed. "
             f"Permitted: {sorted(_ALLOWED_MAVEN_GOALS)}"
         ))
-    command = f". /use-java.sh 17 && cd /workspace && mvn -B clean {goal}"
+    command = f". use-java.sh 17 && cd /workspace && mvn -B clean {goal}"
     try:
         proc = subprocess.run(
             [

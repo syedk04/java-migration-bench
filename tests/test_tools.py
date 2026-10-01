@@ -235,3 +235,20 @@ def test_run_maven_allowed_goals_accepted(tmp_path, monkeypatch):
     for goal in ("compile", "test", "verify"):
         r = run_maven(tmp_path, goal)
         assert r["ok"] is True
+
+
+def test_run_maven_sources_use_java_from_path(tmp_path, monkeypatch):
+    # The image installs the switcher at /usr/local/bin/use-java.sh, so it must
+    # be sourced by name (PATH lookup), never as /use-java.sh.
+    import subprocess as _sp
+    seen: list[list[str]] = []
+
+    def _fake_run(args, **kw):
+        seen.append(args)
+        return type("R", (), {"returncode": 0, "stdout": "", "stderr": ""})()
+
+    monkeypatch.setattr(_sp, "run", _fake_run)
+    run_maven(tmp_path, "verify")
+    command = seen[0][-1]
+    assert command.startswith(". use-java.sh 17 && ")
+    assert "/use-java.sh" not in command
