@@ -261,6 +261,12 @@ def run_agent(
 
     # Check if already completed (terminal record present).
     existing = _load_traj(traj_path)
+    if existing and existing[-1].get("role") != "terminal":
+        # An earlier run stopped mid-repo (quota, crash). The clone is reset
+        # below, so restart cleanly and keep the partial log for reference.
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        traj_path.rename(traj_path.with_name(f"{safe_name}.aborted-{stamp}.jsonl"))
+        existing = []
     if existing and existing[-1].get("role") == "terminal":
         last = existing[-1]
         return AgentResult(
@@ -317,9 +323,10 @@ def run_agent(
     for _ in range(MAX_CALLS):
         try:
             resp = client.chat(messages, system=system_prompt)
-        except GeminiRateLimitError as exc:
-            final_error = f"GeminiRateLimitError: {exc}"
-            break
+        except GeminiRateLimitError:
+            # Out of quota is not a migration failure: write no terminal
+            # record, so the batch stops and this repo reruns on resume.
+            raise
         except Exception as exc:  # noqa: BLE001
             final_error = f"API error: {exc}"
             break

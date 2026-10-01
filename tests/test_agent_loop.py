@@ -285,3 +285,67 @@ def test_run_agent_trajectory_written(
     records = _load_traj(traj_path)
     # Must end with a terminal record.
     assert records[-1]["role"] == "terminal"
+
+
+@patch("migration_agent.agent_loop.clone_at_commit")
+@patch("migration_agent.agent_loop.snapshot_tests")
+@patch("migration_agent.agent_loop.verify")
+@patch("migration_agent.agent_loop.GeminiClient")
+def test_run_agent_quota_error_propagates_without_terminal_record(
+    MockClient, mock_verify, mock_snap, mock_clone, tmp_path,
+):
+    """Running out of quota must not be scored as a migration FAIL."""
+    import json
+
+    import pytest
+
+    from migration_agent.agent_loop import run_agent
+    from migration_agent.gemini_client import GeminiRateLimitError
+
+    MockClient.return_value.chat.side_effect = GeminiRateLimitError("daily quota")
+    traj_dir = tmp_path / "traj"
+
+    with pytest.raises(GeminiRateLimitError):
+        run_agent("owner/repo", "abc123", "sys", track="T2",
+                  trajectory_dir=traj_dir, api_key="fake-key")
+
+    mock_verify.assert_not_called()
+    rows = [json.loads(line) for line in
+            (traj_dir / "owner__repo.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert all(r["role"] != "terminal" for r in rows)
+
+
+@patch("migration_agent.agent_loop.clone_at_commit")
+@patch("migration_agent.agent_loop.snapshot_tests")
+@patch("migration_agent.agent_loop.verify")
+@patch("migration_agent.agent_loop.check_tamper")
+@patch("migration_agent.agent_loop.check_maximal_effective")
+@patch("migration_agent.agent_loop.load_version_index")
+@patch("migration_agent.agent_loop.GeminiClient")
+def test_run_agent_sets_aside_partial_trajectory(
+    MockClient, mock_load_idx, mock_maximal, mock_tamper,
+    mock_verify, mock_snap, mock_clone, tmp_path,
+):
+    """A non-terminal trajectory from an interrupted run is renamed, not appended to."""
+    import json
+
+    from migration_agent.agent_loop import run_agent
+
+    traj_dir = tmp_path / "traj"
+    traj_dir.mkdir()
+    partial = traj_dir / "owner__repo.jsonl"
+    partial.write_text(json.dumps({"turn": 0, "role": "user", "content_snippet": "old"}) + "\n",
+                       encoding="utf-8")
+
+    MockClient.return_value.chat.return_value = _make_mock_response("DONE")
+    mock_verify.return_value = MagicMock(r1_build=False, r2_bytecode=False, maven_tail="")
+
+    run_agent("owner/repo", "abc123", "sys", track="T2",
+              trajectory_dir=traj_dir, api_key="fake-key")
+
+    aborted = list(traj_dir.glob("owner__repo.aborted-*.jsonl"))
+    assert len(aborted) == 1
+    assert "old" in aborted[0].read_text(encoding="utf-8")
+    fresh = partial.read_text(encoding="utf-8")
+    assert "old" not in fresh
+    assert json.loads(fresh.splitlines()[-1])["role"] == "terminal"

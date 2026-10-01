@@ -243,3 +243,42 @@ def test_load_env_file_does_not_override_existing(tmp_path, monkeypatch):
     load_env_file(env)
     assert os.environ["GEMINI_API_KEY"] == "from_shell"
     assert os.environ["GEMINI_MODEL"] == "m"
+
+
+def test_daily_quota_429_raises_rate_limit_without_retrying(tmp_path, monkeypatch):
+    client = _make_client(tmp_path, rpm=1400)
+    attempts = {"n": 0}
+    body = (
+        b'{"error": {"code": 429, "details": '
+        b'[{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}}'
+    )
+
+    def fake_urlopen(req, **kw):
+        attempts["n"] += 1
+        raise urllib.error.HTTPError(
+            url="", code=429, msg="Too Many Requests",
+            hdrs=None, fp=BytesIO(body),  # type: ignore[arg-type]
+        )
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+
+    with pytest.raises(GeminiRateLimitError, match="Daily quota"):
+        client.chat([GeminiMessage(role="user", content="hi")])
+    assert attempts["n"] == 1
+
+
+def test_429_after_all_retries_is_rate_limit_error(tmp_path, monkeypatch):
+    client = _make_client(tmp_path, rpm=1400)
+
+    def fake_urlopen(req, **kw):
+        raise urllib.error.HTTPError(
+            url="", code=429, msg="Too Many Requests",
+            hdrs=None, fp=BytesIO(b"rate limited"),  # type: ignore[arg-type]
+        )
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+
+    with pytest.raises(GeminiRateLimitError, match="HTTP 429"):
+        client.chat([GeminiMessage(role="user", content="hi")])

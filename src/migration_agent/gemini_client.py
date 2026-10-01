@@ -240,16 +240,21 @@ class GeminiClient:
                 with urllib.request.urlopen(req, timeout=120) as resp:
                     return json.loads(resp.read().decode())
             except urllib.error.HTTPError as exc:
+                body_text = (exc.read() if exc.fp else b"")[:2000].decode(errors="replace")
+                # A per-day quota 429 won't clear with backoff; fail fast so the
+                # batch can stop instead of sleeping through every retry.
+                if exc.code == 429 and "PerDay" in body_text:
+                    raise GeminiRateLimitError(
+                        f"Daily quota exhausted (HTTP 429): {body_text[:500]}"
+                    ) from exc
                 if exc.code in (429, 503) and attempt < _MAX_RETRIES:
                     jitter = random.uniform(0, backoff * 0.25)
                     wait = min(backoff + jitter, _MAX_BACKOFF_S)
                     time.sleep(wait)
                     backoff = min(backoff * 2, _MAX_BACKOFF_S)
                     continue
-                body_bytes = exc.read() if exc.fp else b""
-                raise GeminiError(
-                    f"HTTP {exc.code}: {body_bytes[:500].decode(errors='replace')}"
-                ) from exc
+                err_cls = GeminiRateLimitError if exc.code == 429 else GeminiError
+                raise err_cls(f"HTTP {exc.code}: {body_text[:500]}") from exc
             except urllib.error.URLError as exc:
                 raise GeminiError(f"Network error: {exc.reason}") from exc
         raise GeminiError(f"Exhausted {_MAX_RETRIES} retries on {url}")
