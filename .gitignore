@@ -12,3 +12,7 @@ build/
 /workdir/
 /.m2/
 *.log
+
+# local notes
+/PROGRESS.md
+.env
