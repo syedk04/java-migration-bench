@@ -44,6 +44,34 @@ just satisfied the checker.
   code, so nothing private is at stake, but it's disclosed here rather than
   left for someone to find.
 
+## Running it
+
+Needs Python 3.12 with [uv](https://docs.astral.sh/uv/) and Docker. Every
+build runs inside the sandbox image, so no local JDK or Maven is required.
+
+```bash
+uv sync
+docker build -t migration-agent-base:latest docker/
+uv run python -m migration_agent.warm_m2          # one-time: fill the shared .m2 cache
+uv run pytest -q                                  # unit tests, no network or Docker
+
+# LLM-free tracks
+uv run python -m migration_agent.migrate_t0 --batch --manifest reporting_50.json
+uv run python -m migration_agent.migrate_openrewrite --batch --manifest reporting_50.json
+
+# agent tracks: always run the 5-repo pilot first and check the projection
+echo 'GEMINI_API_KEY=...' > .env                  # gitignored
+uv run python -m migration_agent.migrate_t2 --pilot --manifest reporting_50.json
+
+# score and publish
+uv run python -m migration_agent.recheck_maximal
+uv run python -m migration_agent.final_report     # updates the table below
+uv run python -m migration_agent.generate_site    # writes docs/index.html
+```
+
+Per-repo logs and trajectories go to `workdir/` (gitignored). Each module
+takes `--help`.
+
 ## Results
 
 <!-- RESULTS_TABLE_START -->
