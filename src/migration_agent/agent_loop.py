@@ -77,7 +77,7 @@ object immediately after "TOOL: "):
   TOOL: {"tool":"grep","pattern":"<source>","path":".","include":"*.java"}
   TOOL: {"tool":"apply_patch","patch":"<unified-diff>"}
   TOOL: {"tool":"run_maven","goal":"verify"}
-  TOOL: {"tool":"run_command","command":"find","args":[".","- name","pom.xml"]}
+  TOOL: {"tool":"run_command","command":"find","args":[".","-name","pom.xml"]}
 
 When migration is complete output exactly: DONE
 
