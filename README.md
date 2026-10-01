@@ -4,8 +4,11 @@ Reproducing the [MigrationBench](https://arxiv.org/abs/2505.09569) Java 8 to
 Java 17 migration ladder, on free-tier infrastructure only, with a harness
 that tries to catch answers that look right but aren't.
 
-Status: early build. Nothing to report yet. See the build log below for what
-exists so far.
+Status: the two LLM-free tracks (T0 compiler bump, T1 OpenRewrite) are run
+and scored, and T1 lands on the paper's OpenRewrite numbers, which is the
+calibration check for the harness. The agent tracks (T2-T4) are built and
+tested but not yet run: the free-tier Gemini quota available to new API keys
+is too small for a full 50-repo pass.
 
 ## What this is
 
@@ -27,7 +30,7 @@ just satisfied the checker.
 
 ## Constraints, stated up front
 
-- Zero spend. Gemini 2.5 Flash / Flash-Lite via Google AI Studio's free
+- Zero spend. Gemini Flash / Flash-Lite via Google AI Studio's free
   tier, GitHub Actions on a public repo, local Docker.
 - 40 LLM calls per repo, not the paper's 80. This is a quota constraint, not
   a design choice, and every number reported here should be read against it.
@@ -44,7 +47,7 @@ just satisfied the checker.
 ## Results
 
 <!-- RESULTS_TABLE_START -->
-### Our results (n=50, Gemini 2.5 Flash, 40-call budget)
+### Our results (n=50; LLM tracks get a 40-call budget)
 
 | track | n | minimal | 95% CI | maximal | 95% CI | avg calls |
 |---|---|---|---|---|---|---|
@@ -121,12 +124,15 @@ just satisfied the checker.
   These are repos that were already Java-17-compatible with just a compiler
   setting change. This is the floor for every later track.
 - S11: T1 — OpenRewrite `UpgradeToJava17` recipe applied before the same
-  verifier pipeline. Batch running; results pending.
+  verifier pipeline. **Result: 5/50 = 10.0% minimal, 1/50 = 2.0% maximal**,
+  against the paper's 16.33% / 2.00%. The minimal intervals overlap at n=50,
+  so this is the calibration gate passing. Rewrite plugin pinned to 6.46.1
+  (rewrite-migrate-java 3.42.1) so the result is reproducible.
 - S12: results store (`results/`) + README table generator
   (`src/migration_agent/results.py`). Reads per-repo JSON logs, computes
   Wilson 95% CIs, writes committed summary JSON, regenerates the Results
   table above. Re-run after each batch completes.
-- S13: Gemini 2.5 Flash client — stdlib urllib, 14 RPM token bucket, 1400
+- S13: Gemini Flash client — stdlib urllib, 14 RPM token bucket, 1400
   RPD daily counter with date-rollover reset, 429/503 exponential backoff.
 - S14: agent tool layer — read/write/list/grep/apply_patch/run_maven/
   run_command. Path-traversal guard, output truncation, Maven goal allowlist,

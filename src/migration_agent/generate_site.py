@@ -141,7 +141,7 @@ def generate_html(report: dict) -> str:
 
 <div class="constraints">
   <span class="pill">n = 50 repos</span>
-  <span class="pill">Gemini 2.5 Flash (free tier)</span>
+  <span class="pill">Gemini free tier (LLM tracks)</span>
   <span class="pill">40 LLM calls / repo</span>
   <span class="pill">14 RPM / 1400 RPD quota</span>
   <span class="pill">zero paid infrastructure</span>

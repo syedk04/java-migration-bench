@@ -131,7 +131,7 @@ def build_full_table(summaries: list[dict]) -> str:
     lines: list[str] = []
 
     # Our results.
-    lines.append("### Our results (n=50, Gemini 2.5 Flash, 40-call budget)")
+    lines.append("### Our results (n=50; LLM tracks get a 40-call budget)")
     lines.append("")
     lines.append("| track | n | minimal | 95% CI | maximal | 95% CI | avg calls |")
     lines.append("|---|---|---|---|---|---|---|")
