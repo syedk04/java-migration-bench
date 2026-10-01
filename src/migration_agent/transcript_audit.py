@@ -27,7 +27,7 @@ import os
 import sys
 from pathlib import Path
 
-from migration_agent.gemini_client import GeminiClient, GeminiMessage
+from migration_agent.gemini_client import GeminiClient, GeminiMessage, load_env_file
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LOGS_DIR = REPO_ROOT / "workdir" / "_logs"
@@ -276,6 +276,7 @@ if __name__ == "__main__":
     parser.add_argument("--api-key", default=None)
     args = parser.parse_args()
 
+    load_env_file()
     api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERROR: Set GEMINI_API_KEY or pass --api-key.", file=sys.stderr)

@@ -25,6 +25,7 @@ import time
 from pathlib import Path
 
 from migration_agent.agent_loop import AgentResult, run_batch
+from migration_agent.gemini_client import load_env_file
 from migration_agent.migrate_t3 import ENGINEERED_SYSTEM_PROMPT
 from migration_agent.migrate_t4 import _load_version_map, _VersionAugmentedBatch
 
@@ -77,6 +78,7 @@ def main() -> None:
     parser.add_argument("--api-key", default=None)
     args = parser.parse_args()
 
+    load_env_file()
     api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERROR: Set GEMINI_API_KEY or pass --api-key.", file=sys.stderr)

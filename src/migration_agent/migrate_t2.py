@@ -26,6 +26,7 @@ import time
 from pathlib import Path
 
 from migration_agent.agent_loop import AgentResult, run_batch
+from migration_agent.gemini_client import load_env_file
 from migration_agent.results import build_table, summarise
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -87,6 +88,7 @@ def main() -> None:
                         help="Gemini API key (or set GEMINI_API_KEY env var).")
     args = parser.parse_args()
 
+    load_env_file()
     api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERROR: No Gemini API key. Set GEMINI_API_KEY or pass --api-key.",

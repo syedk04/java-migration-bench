@@ -23,6 +23,7 @@ import time
 from pathlib import Path
 
 from migration_agent.agent_loop import AgentResult, run_batch
+from migration_agent.gemini_client import load_env_file
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_DIR = REPO_ROOT / "manifests"
@@ -154,6 +155,7 @@ def main() -> None:
     parser.add_argument("--api-key", default=None)
     args = parser.parse_args()
 
+    load_env_file()
     api_key = args.api_key or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERROR: Set GEMINI_API_KEY or pass --api-key.", file=sys.stderr)

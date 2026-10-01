@@ -5,6 +5,7 @@ key or internet access is required.
 """
 
 import json
+import os
 import time
 import urllib.error
 import urllib.request
@@ -18,6 +19,8 @@ from migration_agent.gemini_client import (
     GeminiError,
     GeminiMessage,
     GeminiRateLimitError,
+    load_env_file,
+    read_env_file,
 )
 
 # ---------------------------------------------------------------------------
@@ -209,3 +212,34 @@ def test_no_api_key_raises(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     with pytest.raises(ValueError, match="No Gemini API key"):
         GeminiClient(api_key=None)
+
+
+def test_read_env_file_parses_quotes_comments_export_and_bom(tmp_path):
+    env = tmp_path / ".env"
+    env.write_bytes(
+        b"\xef\xbb\xbfGEMINI_API_KEY=abc123\n"  # UTF-8 BOM, as Notepad writes it
+        b"# comment\n"
+        b"\n"
+        b"export GEMINI_MODEL=\"gemini-flash-latest\"\n"
+        b"OTHER='x=y'\n"
+        b"no_equals_line\n"
+    )
+    assert read_env_file(env) == {
+        "GEMINI_API_KEY": "abc123",
+        "GEMINI_MODEL": "gemini-flash-latest",
+        "OTHER": "x=y",
+    }
+
+
+def test_read_env_file_missing_returns_empty(tmp_path):
+    assert read_env_file(tmp_path / "nope.env") == {}
+
+
+def test_load_env_file_does_not_override_existing(tmp_path, monkeypatch):
+    env = tmp_path / ".env"
+    env.write_text("GEMINI_API_KEY=from_file\nGEMINI_MODEL=m\n", encoding="utf-8")
+    monkeypatch.setenv("GEMINI_API_KEY", "from_shell")
+    monkeypatch.delenv("GEMINI_MODEL", raising=False)
+    load_env_file(env)
+    assert os.environ["GEMINI_API_KEY"] == "from_shell"
+    assert os.environ["GEMINI_MODEL"] == "m"

@@ -80,6 +80,34 @@ _MAX_RETRIES = 6
 _global_last_call_ts: float = 0.0
 
 
+def read_env_file(path: Path = Path(".env")) -> dict[str, str]:
+    """Parse KEY=VALUE lines from a local, gitignored .env file.
+
+    Blank lines and # comments are skipped; surrounding quotes are stripped.
+    A missing file returns {}.
+    """
+    if not path.is_file():
+        return {}
+    out: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.removeprefix("export ").strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        out[key] = value
+    return out
+
+
+def load_env_file(path: Path = Path(".env")) -> None:
+    """Copy .env entries into os.environ without overriding variables already set."""
+    for key, value in read_env_file(path).items():
+        os.environ.setdefault(key, value)
+
+
 # ---------------------------------------------------------------------------
 # Client
 # ---------------------------------------------------------------------------
