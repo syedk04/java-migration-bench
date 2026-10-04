@@ -16,3 +16,16 @@ build/
 # local notes
 /PROGRESS.md
 .env
+
+# Local editor and assistant config, never committed
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+GEMINI.md
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.continue/
+.coderabbit.yaml
